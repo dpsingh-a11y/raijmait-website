@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Dashboard | Rajmait</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231f7ae0'/%3E%3Ctext x='12' y='17' font-size='13' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="navbar">
+    <div class="container">
+      <a href="/" class="brand">
+        <span class="brand-mark">R</span>
+        Rajmait
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/services.html">Services</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-outline" id="logout-btn">Log Out</button>
+        <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="dashboard-shell">
+      <div class="container">
+        <div class="dashboard-card">
+          <div class="dashboard-header">
+            <div>
+              <h1 id="welcome-heading" class="mt-0">Welcome back</h1>
+              <p style="margin:0;color:var(--color-slate-500);">Here's a snapshot of your Rajmait engagement.</p>
+            </div>
+            <span class="pill"><span class="pill-dot"></span> Session active</span>
+          </div>
+
+          <div class="grid grid-3">
+            <div class="card">
+              <h3>Account</h3>
+              <p id="account-name">—</p>
+              <p id="account-email" style="color:var(--color-slate-500);font-size:0.9rem;">—</p>
+              <p id="account-company" style="color:var(--color-slate-500);font-size:0.9rem;"></p>
+            </div>
+            <div class="card">
+              <h3>Active Engagement</h3>
+              <p>Cloud Migration — Phase 2 of 3</p>
+              <p style="color:var(--color-slate-500);font-size:0.9rem;">Next milestone review: Aug 4, 2026</p>
+            </div>
+            <div class="card">
+              <h3>Support</h3>
+              <p>Priority 24/7 SLA active</p>
+              <p style="color:var(--color-slate-500);font-size:0.9rem;">Escalation lead: Sana Nair</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js" defer></script>
+  <script src="/js/dashboard.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In | Rajmait Client Portal</title>
+  <meta name="description" content="Log in to the Rajmait client portal to view your engagement status, reports, and account details." />
+  <meta name="theme-color" content="#0a1930" />
+  <meta name="robots" content="noindex" />
+  <link rel="canonical" href="/login.html" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231f7ae0'/%3E%3Ctext x='12' y='17' font-size='13' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="navbar">
+    <div class="container">
+      <a href="/" class="brand">
+        <span class="brand-mark">R</span>
+        Rajmait
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/services.html">Services</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="/login.html" class="btn btn-outline" aria-current="page">Log In</a>
+        <a href="/services.html#contact" class="btn btn-primary">Get a Consultation</a>
+        <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <h1>Client Portal</h1>
+        <p class="auth-sub">Sign in to view your engagement status, or create an account to get started.</p>
+
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Log In</button>
+          <button class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="panel-register">Create Account</button>
+        </div>
+
+        <div class="alert alert-error" id="form-error" role="alert"></div>
+
+        <!-- Login panel -->
+        <form class="form-panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+          <div class="form-group">
+            <label for="login-email">Email address</label>
+            <input id="login-email" name="email" type="email" required autocomplete="email" placeholder="you@company.com" />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="password-field">
+              <input id="login-password" name="password" type="password" required autocomplete="current-password" minlength="8" />
+              <button type="button" class="password-toggle" data-toggle-for="login-password">Show</button>
+            </div>
+          </div>
+          <div class="form-row-between">
+            <label class="checkbox-row">
+              <input type="checkbox" id="login-remember" checked />
+              Keep me signed in
+            </label>
+            <a href="#" id="demo-fill">Use demo account</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-submit">Log In</button>
+        </form>
+
+        <!-- Register panel -->
+        <form class="form-panel" id="panel-register" role="tabpanel" aria-labelledby="tab-register">
+          <div class="form-group">
+            <label for="register-name">Full name</label>
+            <input id="register-name" name="name" type="text" required autocomplete="name" minlength="2" />
+          </div>
+          <div class="form-group">
+            <label for="register-company">Company (optional)</label>
+            <input id="register-company" name="company" type="text" autocomplete="organization" />
+          </div>
+          <div class="form-group">
+            <label for="register-email">Work email</label>
+            <input id="register-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <div class="password-field">
+              <input id="register-password" name="password" type="password" required autocomplete="new-password" minlength="8" />
+              <button type="button" class="password-toggle" data-toggle-for="register-password">Show</button>
+            </div>
+            <div class="strength-meter"><span id="strength-bar"></span></div>
+            <div class="hint">Use at least 8 characters. Mix letters, numbers &amp; symbols for a stronger password.</div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="register-submit">Create Account</button>
+        </form>
+
+        <p class="hint text-center" style="margin-top:20px;">
+          By continuing you agree to Rajmait's Terms of Service and Privacy Policy.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js" defer></script>
+  <script src="/js/auth.js" defer></script>
+</body>
+</html>
