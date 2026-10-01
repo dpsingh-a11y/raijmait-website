@@ -1,0 +1,24 @@
+model Model
+	defaultPowerBIDataSourceVersion: powerBI_V3
+
+ref table Dim_Project
+ref table Dim_SHG
+ref table Dim_Member
+ref table Dim_FundSource
+ref table Dim_LoanPurpose
+ref table Dim_ExpenseCategory
+ref table Fact_Savings
+ref table Fact_Withdrawals
+ref table Fact_FundReceipts
+ref table Fact_Loans
+ref table Fact_LoanSchedule
+ref table Fact_Repayments
+ref table Fact_LoanApplications
+ref table Fact_Expenses
+ref table Fact_Meetings
+ref table Fact_Agriculture
+ref table Dim_Date
+ref table _Measures
+
+ref expression pFilePath
+ref expression fnSheet

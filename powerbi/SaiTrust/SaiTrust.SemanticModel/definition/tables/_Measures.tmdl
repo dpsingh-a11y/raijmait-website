@@ -1,0 +1,418 @@
+table _Measures
+
+	column x
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [x]
+
+	measure 'SHG Count' = DISTINCTCOUNT ( Dim_SHG[SHG_ID] )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure 'Active SHGs' = CALCULATE ( DISTINCTCOUNT ( Dim_SHG[SHG_ID] ), Dim_SHG[Status] = "Active" )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure Members = CALCULATE ( DISTINCTCOUNT ( Dim_Member[Member_ID] ), Dim_Member[Status] = "Active" )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure 'Female Members' = CALCULATE ( [Members], Dim_Member[Gender] = "Female" )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure 'Female %' = DIVIDE ( [Female Members], [Members] )
+		formatString: 0.0%
+		displayFolder: 'SHG & Members'
+
+	measure 'Avg Members per SHG' = DIVIDE ( [Members], [SHG Count] )
+		formatString: #,0.00
+		displayFolder: 'SHG & Members'
+
+	measure 'Villages Covered' = DISTINCTCOUNT ( Dim_SHG[Village] )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure 'Districts Covered' = DISTINCTCOUNT ( Dim_SHG[District] )
+		formatString: #,0
+		displayFolder: 'SHG & Members'
+
+	measure 'Avg Member Age' = AVERAGE ( Dim_Member[Age] )
+		formatString: #,0.00
+		displayFolder: 'SHG & Members'
+
+	measure 'Total Savings' = SUM ( Fact_Savings[Amount] )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Total Withdrawals' = SUM ( Fact_Withdrawals[Amount] )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Net Savings' = [Total Savings] - [Total Withdrawals]
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure Savers = DISTINCTCOUNT ( Fact_Savings[Member_ID] )
+		formatString: #,0
+		displayFolder: Savings
+
+	measure 'Savings per Member' = DIVIDE ( [Net Savings], [Members] )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Avg Saving Entry' = AVERAGE ( Fact_Savings[Amount] )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Withdrawal Ratio %' = DIVIDE ( [Total Withdrawals], [Total Savings] )
+		formatString: 0.0%
+		displayFolder: Savings
+
+	measure 'Savings MTD' = TOTALMTD ( [Total Savings], Dim_Date[Date] )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Savings Last Month' = CALCULATE ( [Total Savings], DATEADD ( Dim_Date[Date], -1, MONTH ) )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Savings MoM %' = DIVIDE ( [Total Savings] - [Savings Last Month], [Savings Last Month] )
+		formatString: 0.0%
+		displayFolder: Savings
+
+	measure 'Savings YTD (FY)' = CALCULATE ( [Total Savings], DATESYTD ( Dim_Date[Date], "3/31" ) )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Cumulative Savings' = CALCULATE ( [Net Savings], FILTER ( ALL ( Dim_Date[Date] ), Dim_Date[Date] <= MAX ( Dim_Date[Date] ) ) )
+		formatString: "₹"#,0
+		displayFolder: Savings
+
+	measure 'Fund Received' = SUM ( Fact_FundReceipts[Amount] )
+		formatString: "₹"#,0
+		displayFolder: Funds
+
+	measure 'Fund Receipts #' = COUNTROWS ( Fact_FundReceipts )
+		formatString: #,0
+		displayFolder: Funds
+
+	measure 'Fund Sources #' = DISTINCTCOUNT ( Fact_FundReceipts[Fund_Source_ID] )
+		formatString: #,0
+		displayFolder: Funds
+
+	measure 'Fund per SHG' = DIVIDE ( [Fund Received], [SHG Count] )
+		formatString: "₹"#,0
+		displayFolder: Funds
+
+	measure 'Total Expenses' = SUM ( Fact_Expenses[Amount] )
+		formatString: "₹"#,0
+		displayFolder: Funds
+
+	measure 'Expense % of Funds' = DIVIDE ( [Total Expenses], [Fund Received] )
+		formatString: 0.0%
+		displayFolder: Funds
+
+	measure 'Expense per SHG' = DIVIDE ( [Total Expenses], [SHG Count] )
+		formatString: "₹"#,0
+		displayFolder: Funds
+
+	measure 'Loans Disbursed' = SUM ( Fact_Loans[Principal_Amount] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Loans #' = COUNTROWS ( Fact_Loans )
+		formatString: #,0
+		displayFolder: Loans
+
+	measure Borrowers = DISTINCTCOUNT ( Fact_Loans[Member_ID] )
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'Avg Loan Size' = DIVIDE ( [Loans Disbursed], [Loans #] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Loan Penetration %' = DIVIDE ( [Borrowers], [Members] )
+		formatString: 0.0%
+		displayFolder: Loans
+
+	measure 'Principal Collected' = SUM ( Fact_Repayments[Principal_Paid] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Interest Collected' = SUM ( Fact_Repayments[Interest_Paid] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Penalty Collected' = SUM ( Fact_Repayments[Penalty] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Total Collected' = SUM ( Fact_Repayments[Total_Paid] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Outstanding Principal' = [Loans Disbursed] - [Principal Collected]
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Principal Due To Date' = CALCULATE ( SUM ( Fact_LoanSchedule[Principal_Due] ), Fact_LoanSchedule[Due_Date] <= TODAY () )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Overdue Principal' =
+			CALCULATE (
+			    SUM ( Fact_LoanSchedule[Principal_Due] ),
+			    Fact_LoanSchedule[Status] = "Pending",
+			    Fact_LoanSchedule[Due_Date] < TODAY ()
+			)
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Overdue Installments #' =
+			CALCULATE (
+			    COUNTROWS ( Fact_LoanSchedule ),
+			    Fact_LoanSchedule[Status] = "Pending",
+			    Fact_LoanSchedule[Due_Date] < TODAY ()
+			)
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'Overdue Loans #' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Fact_LoanSchedule[Loan_ID] ),
+			    Fact_LoanSchedule[Status] = "Pending",
+			    Fact_LoanSchedule[Due_Date] < TODAY ()
+			)
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'PAR %' = DIVIDE ( [Overdue Principal], [Outstanding Principal] )
+		formatString: 0.0%
+		displayFolder: Loans
+
+	measure 'Repayment Rate %' = DIVIDE ( [Principal Collected], [Principal Due To Date] )
+		formatString: 0.0%
+		displayFolder: Loans
+
+	measure 'Interest Yield %' = DIVIDE ( [Interest Collected], [Loans Disbursed] )
+		formatString: 0.0%
+		displayFolder: Loans
+
+	measure 'Upcoming Due (30 days)' =
+			CALCULATE (
+			    SUM ( Fact_LoanSchedule[Installment_Due] ),
+			    Fact_LoanSchedule[Status] = "Pending",
+			    DATESBETWEEN ( Fact_LoanSchedule[Due_Date], TODAY (), TODAY () + 30 )
+			)
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Avg Interest Rate' = AVERAGE ( Fact_Loans[Interest_Rate] )
+		formatString: #,0.00
+		displayFolder: Loans
+
+	measure 'Avg Tenure (months)' = AVERAGE ( Fact_Loans[Tenure] )
+		formatString: #,0.00
+		displayFolder: Loans
+
+	measure 'PAR Status' =
+			SWITCH ( TRUE (),
+			    ISBLANK ( [PAR %] ), "No data",
+			    [PAR %] <= 0.05,     "Healthy",
+			    [PAR %] <= 0.10,     "Watch",
+			    "At risk" )
+		displayFolder: Loans
+
+	measure 'Loan Repaid' = CALCULATE ( SUM ( Fact_Repayments[Principal_Paid] ), TREATAS ( VALUES ( Fact_Loans[Loan_ID] ), Fact_Repayments[Loan_ID] ) )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Loan Outstanding' = SUM ( Fact_Loans[Principal_Amount] ) - [Loan Repaid]
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Loan Overdue Instalments' =
+			CALCULATE (
+			    COUNTROWS ( Fact_LoanSchedule ),
+			    TREATAS ( VALUES ( Fact_Loans[Loan_ID] ), Fact_LoanSchedule[Loan_ID] ),
+			    Fact_LoanSchedule[Status] = "Pending",
+			    Fact_LoanSchedule[Due_Date] < TODAY ()
+			)
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'Scheduled Instalments' = SUM ( Fact_LoanSchedule[Installment_Due] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Applications #' = COUNTROWS ( Fact_LoanApplications )
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'Applied Amount' = SUM ( Fact_LoanApplications[Requested_Amount] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Approved Amount' = SUM ( Fact_LoanApplications[Approved_Amount] )
+		formatString: "₹"#,0
+		displayFolder: Loans
+
+	measure 'Approval Rate %' = DIVIDE ( CALCULATE ( [Applications #], Fact_LoanApplications[Status] = "Approved" ), [Applications #] )
+		formatString: 0.0%
+		displayFolder: Loans
+
+	measure 'Pending Applications #' = CALCULATE ( [Applications #], Fact_LoanApplications[Status] = "Pending" )
+		formatString: #,0
+		displayFolder: Loans
+
+	measure 'Estimated Cash Balance' =
+			[Fund Received] + [Total Savings] + [Total Collected]
+			    - [Total Withdrawals] - [Loans Disbursed] - [Total Expenses]
+		formatString: "₹"#,0
+		displayFolder: Position
+
+	measure 'Meetings Held' = COUNTROWS ( Fact_Meetings )
+		formatString: #,0
+		displayFolder: Position
+
+	measure 'Attendance %' = DIVIDE ( SUM ( Fact_Meetings[Members_Present] ), SUM ( Fact_Meetings[Total_Members] ) )
+		formatString: 0.0%
+		displayFolder: Position
+
+	measure 'Meetings per SHG' = DIVIDE ( [Meetings Held], [SHG Count] )
+		formatString: #,0.00
+		displayFolder: Position
+
+	measure 'Survey Records' = COUNTROWS ( Fact_Agriculture )
+		formatString: #,0
+		displayFolder: Agriculture
+
+	measure 'Farmers Surveyed' = DISTINCTCOUNT ( Fact_Agriculture[Member_ID] )
+		formatString: #,0
+		displayFolder: Agriculture
+
+	measure 'Cultivating Records' = CALCULATE ( [Survey Records], Fact_Agriculture[Cultivated] = "Yes" )
+		formatString: #,0
+		displayFolder: Agriculture
+
+	measure 'Land Holding (ha)' = SUM ( Fact_Agriculture[Total_Land_Ha] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Avg Land Holding (ha)' = AVERAGE ( Fact_Agriculture[Total_Land_Ha] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Irrigated Land (ha)' = SUM ( Fact_Agriculture[Irrigated_Land_Ha] )
+		displayFolder: Agriculture
+
+	measure 'Irrigated % of Agri Land' = DIVIDE ( [Irrigated Land (ha)], SUM ( Fact_Agriculture[Agri_Land_Ha] ) )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Area Sown (ha)' = SUM ( Fact_Agriculture[Sown_Area_Ha] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Production (qtl)' = SUM ( Fact_Agriculture[Production_Qtl] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Yield (qtl/ha)' = DIVIDE ( [Production (qtl)], [Area Sown (ha)] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Crop Income' = SUM ( Fact_Agriculture[Income] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Cultivation Cost' = SUM ( Fact_Agriculture[Cultivation_Cost] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Net Profit' = SUM ( Fact_Agriculture[Net_Profit] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Profit per ha' = DIVIDE ( [Net Profit], [Area Sown (ha)] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Benefit Cost Ratio' = DIVIDE ( [Crop Income], [Cultivation Cost] )
+		formatString: #,0.00
+		displayFolder: Agriculture
+
+	measure 'Profit Margin %' = DIVIDE ( [Net Profit], [Crop Income] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Last Year Profit' = SUM ( Fact_Agriculture[LY_Profit] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Last Year Profit per ha' = DIVIDE ( [Last Year Profit], SUM ( Fact_Agriculture[LY_Area_Ha] ) )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Profit Change %' = DIVIDE ( [Net Profit] - [Last Year Profit], ABS ( [Last Year Profit] ) )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Avg Profit per Record' = DIVIDE ( [Net Profit], [Cultivating Records] )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Training Coverage %' = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Training] = "Yes" ), [Survey Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Exposure Visit %' = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Exposure] = "Yes" ), [Survey Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Input Support %' = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Input_Support] = "Yes" ), [Survey Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Demo Plot %' = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Demo_Plot] = "Yes" ), [Survey Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Improved Practice %' = DIVIDE ( CALCULATE ( [Cultivating Records], Fact_Agriculture[Practice_Adopted] <> "Conventional Farming", NOT ISBLANK ( Fact_Agriculture[Practice_Adopted] ) ), [Cultivating Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Certified/Hybrid Seed %' = DIVIDE ( CALCULATE ( [Cultivating Records], Fact_Agriculture[Seed_Type] IN { "Certified", "Hybrid" } ), [Cultivating Records] )
+		formatString: 0.0%
+		displayFolder: Agriculture
+
+	measure 'Profit per Record (Trained)' = CALCULATE ( [Avg Profit per Record], Fact_Agriculture[Training] = "Yes" )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Profit per Record (Not trained)' = CALCULATE ( [Avg Profit per Record], Fact_Agriculture[Training] = "No" )
+		formatString: "₹"#,0
+		displayFolder: Agriculture
+
+	measure 'Rs Short (Savings)' =
+			VAR v = [Total Savings]
+			RETURN "Rs " & IF ( v >= 100000, FORMAT ( v / 100000, "0.0" ) & " L", IF ( v >= 1000, FORMAT ( v / 1000, "0.0" ) & " K", FORMAT ( v, "0" ) ) )
+		displayFolder: Helpers
+
+	measure 'Selected Filters Text' =
+			"Project: "  & IF ( ISFILTERED ( Dim_SHG[Project_ID] ), CONCATENATEX ( VALUES ( Dim_SHG[Project_ID] ), Dim_SHG[Project_ID], ", " ), "All" ) &
+			"  |  State: " & IF ( ISFILTERED ( Dim_SHG[State] ), CONCATENATEX ( VALUES ( Dim_SHG[State] ), Dim_SHG[State], ", " ), "All" )
+		displayFolder: Helpers
+
+	measure 'PAR Colour' = SWITCH ( [PAR Status], "Healthy", "#0CA30C", "Watch", "#FAB219", "At risk", "#D03B3B", "#8A8A85" )
+		displayFolder: Helpers
+
+	measure 'Repayment Colour' = IF ( [Repayment Rate %] >= 0.95, "#0CA30C", IF ( [Repayment Rate %] >= 0.85, "#FAB219", "#D03B3B" ) )
+		displayFolder: Helpers
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW ( "x", 1 )

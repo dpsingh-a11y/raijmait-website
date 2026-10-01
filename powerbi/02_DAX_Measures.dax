@@ -130,6 +130,22 @@ SWITCH ( TRUE (),
     [PAR %] <= 0.10,     "Watch",
     "At risk" )
 
+// Per-loan measures for the loan register table (they do not need a Loan_ID relationship)
+Loan Repaid =
+CALCULATE ( SUM ( Fact_Repayments[Principal_Paid] ), TREATAS ( VALUES ( Fact_Loans[Loan_ID] ), Fact_Repayments[Loan_ID] ) )
+
+Loan Outstanding = SUM ( Fact_Loans[Principal_Amount] ) - [Loan Repaid]
+
+Loan Overdue Instalments =
+CALCULATE (
+    COUNTROWS ( Fact_LoanSchedule ),
+    TREATAS ( VALUES ( Fact_Loans[Loan_ID] ), Fact_LoanSchedule[Loan_ID] ),
+    Fact_LoanSchedule[Status] = "Pending",
+    Fact_LoanSchedule[Due_Date] < TODAY ()
+)
+
+Scheduled Instalments = SUM ( Fact_LoanSchedule[Installment_Due] )
+
 // Loan applications
 Applications #         = COUNTROWS ( Fact_LoanApplications )
 Applied Amount         = SUM ( Fact_LoanApplications[Requested_Amount] )

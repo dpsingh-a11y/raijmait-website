@@ -1,0 +1,134 @@
+table Dim_SHG
+
+	column SHG_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_ID
+
+	column SHG_Name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_Name
+
+	column SHG_Code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_Code
+
+	column Location_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Location_ID
+
+	column State_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: State_ID
+
+	column District_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: District_ID
+
+	column Block_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Block_ID
+
+	column Project_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Project_ID
+
+	column Assigned_User_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Assigned_User_ID
+
+	column Village
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Village
+
+	column Formation_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Formation_Date
+
+	column Bank_Name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Bank_Name
+
+	column IFSC
+		dataType: string
+		summarizeBy: none
+		sourceColumn: IFSC
+
+	column President_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: President_ID
+
+	column Secretary_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Secretary_ID
+
+	column Treasurer_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Treasurer_ID
+
+	column Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Status
+
+	column State
+		dataType: string
+		summarizeBy: none
+		sourceColumn: State
+
+	column District
+		dataType: string
+		summarizeBy: none
+		sourceColumn: District
+
+	column Block
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Block
+
+	column Field_Officer
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Field_Officer
+
+	column SHG_Label
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_Label
+
+	partition Dim_SHG = m
+		mode: import
+		source =
+			let
+			    SHG   = fnSheet("SHGs"),
+			    Keep  = Table.SelectColumns(SHG, {"SHG_ID","SHG_Name","SHG_Code","Location_ID","State_ID","District_ID","Block_ID","Project_ID",
+			                                      "Assigned_User_ID","Village_Name","Formation_Date","Bank_Name","IFSC","President_ID","Secretary_ID","Treasurer_ID","Status"}),
+			    St    = Table.NestedJoin(Keep, {"State_ID"},    fnSheet("States"),    {"State_ID"},    "S", JoinKind.LeftOuter),
+			    St2   = Table.ExpandTableColumn(St, "S", {"State_Name"}),
+			    Di    = Table.NestedJoin(St2, {"District_ID"},  fnSheet("Districts"), {"District_ID"}, "D", JoinKind.LeftOuter),
+			    Di2   = Table.ExpandTableColumn(Di, "D", {"District_Name"}),
+			    Bl    = Table.NestedJoin(Di2, {"Block_ID"},     fnSheet("Blocks"),    {"Block_ID"},    "B", JoinKind.LeftOuter),
+			    Bl2   = Table.ExpandTableColumn(Bl, "B", {"Block_Name"}),
+			    Us    = Table.NestedJoin(Bl2, {"Assigned_User_ID"}, fnSheet("Users"), {"User_ID"},    "U", JoinKind.LeftOuter),
+			    Us2   = Table.ExpandTableColumn(Us, "U", {"User_Name"}, {"Field_Officer"}),
+			    Typed = Table.TransformColumnTypes(Us2, {{"Formation_Date", type date}}),
+			    Ren   = Table.RenameColumns(Typed, {{"State_Name","State"},{"District_Name","District"},{"Block_Name","Block"},{"Village_Name","Village"}}),
+			    // SHG_Name is not unique in the source (29 unique of 30) -> label that is always unique
+			    Label = Table.AddColumn(Ren, "SHG_Label", each [SHG_Name] & " (" & [SHG_ID] & ")", type text)
+			in
+			    Label

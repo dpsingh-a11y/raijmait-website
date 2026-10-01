@@ -1,0 +1,70 @@
+table Fact_LoanSchedule
+
+	column Schedule_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Schedule_ID
+
+	column Loan_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Loan_ID
+
+	column Installment_No
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Installment_No
+
+	column Due_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Due_Date
+
+	column Principal_Due
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Principal_Due
+
+	column Interest_Due
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Interest_Due
+
+	column Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Status
+
+	column Installment_Due
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Installment_Due
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Schedule_Bucket
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Schedule_Bucket
+
+	partition Fact_LoanSchedule = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Loan_Schedule"),
+			    Keep  = Table.SelectColumns(Src, {"Schedule_ID","Loan_ID","Installment_No","Due_Date","Principal_Due","Interest_Due","Status"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Installment_No", Int64.Type},{"Due_Date", type date},{"Principal_Due", Currency.Type},{"Interest_Due", Currency.Type}}),
+			    Total = Table.AddColumn(Typed, "Installment_Due", each [Principal_Due] + [Interest_Due], Currency.Type),
+			    Lk    = Table.NestedJoin(Total, {"Loan_ID"}, fnSheet("Loans"), {"Loan_ID"}, "L", JoinKind.LeftOuter),
+			    Mem   = Table.ExpandTableColumn(Lk, "L", {"Member_ID"}),
+			    Bucket= Table.AddColumn(Mem, "Schedule_Bucket", each if [Status] = "Paid" then "Paid" else if [Due_Date] < Date.From(DateTime.LocalNow()) then "Overdue" else "Due later", type text)
+			in
+			    Bucket

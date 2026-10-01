@@ -1,0 +1,92 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "nt07",
+  "position": {
+    "x": 16,
+    "y": 112,
+    "z": 0,
+    "width": 900,
+    "height": 360,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "What to know about this workbook",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The README sheet says all names, accounts and transactions are fictional test data.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Dates do not line up: 46 of 125 savings entries and 7 of 19 loans are dated before the SHG was formed.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Attendance is unreliable: 17 of 20 meetings record 16 to 18 members, but the groups have 3 to 5 registered members.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "4 withdrawals are larger than the member's recorded savings.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The SHGs sheet balance columns are empty or do not reconcile, so every balance here is calculated from transactions.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Agriculture has 100 survey records for 65 members. Land and last-year figures differ between a member's rows, so each row is treated as its own record.",
+                    "textStyle": {}
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Overdue means a pending instalment with a due date before today. Estimated Cash Balance has no opening balance.",
+                    "textStyle": {}
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

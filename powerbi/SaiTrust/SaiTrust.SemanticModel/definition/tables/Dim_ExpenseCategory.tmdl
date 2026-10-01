@@ -1,0 +1,20 @@
+table Dim_ExpenseCategory
+
+	column Expense_Category_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Expense_Category_ID
+
+	column Expense_Category
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Expense_Category
+
+	partition Dim_ExpenseCategory = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Expense_Categories"),
+			    Typed = Table.TransformColumnTypes(Src, {{"Expense_Category_ID", type text},{"Expense_Category", type text}})
+			in
+			    Typed

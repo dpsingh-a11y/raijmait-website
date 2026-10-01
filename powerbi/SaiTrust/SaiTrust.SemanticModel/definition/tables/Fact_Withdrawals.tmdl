@@ -1,0 +1,48 @@
+table Fact_Withdrawals
+
+	column Withdrawal_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Withdrawal_ID
+
+	column Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	column Reason
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Reason
+
+	column Payment_Mode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Payment_Mode
+
+	column Approved_By
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Approved_By
+
+	partition Fact_Withdrawals = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Savings_Withdrawals"),
+			    Keep  = Table.SelectColumns(Src, {"Withdrawal_ID","Date","Member_ID","Amount","Reason","Payment_Mode","Approved_By"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Date", type date},{"Amount", Currency.Type}})
+			in
+			    Typed

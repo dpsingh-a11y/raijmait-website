@@ -105,17 +105,19 @@ in
 // B5  –  query name:  Dim_LoanPurpose
 // ---------------------------------------------------------------------
 let
-    Src = fnSheet("Loan_Purposes")
+    Src   = fnSheet("Loan_Purposes"),
+    Typed = Table.TransformColumnTypes(Src, {{"Purpose_ID", type text},{"Purpose", type text}})
 in
-    Src
+    Typed
 
 // ---------------------------------------------------------------------
 // B6  –  query name:  Dim_ExpenseCategory
 // ---------------------------------------------------------------------
 let
-    Src = fnSheet("Expense_Categories")
+    Src   = fnSheet("Expense_Categories"),
+    Typed = Table.TransformColumnTypes(Src, {{"Expense_Category_ID", type text},{"Expense_Category", type text}})
 in
-    Src
+    Typed
 
 
 // =====================================================================
@@ -168,21 +170,27 @@ in
 
 // ---------------------------------------------------------------------
 // B11 –  query name:  Fact_LoanSchedule
+//  Member_ID is looked up from Loans so the schedule filters through the
+//  member (same path as the other facts). Schedule_Bucket drives the
+//  Paid / Due later / Overdue colouring.
 // ---------------------------------------------------------------------
 let
     Src   = fnSheet("Loan_Schedule"),
     Keep  = Table.SelectColumns(Src, {"Schedule_ID","Loan_ID","Installment_No","Due_Date","Principal_Due","Interest_Due","Status"}),
     Typed = Table.TransformColumnTypes(Keep, {{"Installment_No", Int64.Type},{"Due_Date", type date},{"Principal_Due", Currency.Type},{"Interest_Due", Currency.Type}}),
-    Total = Table.AddColumn(Typed, "Installment_Due", each [Principal_Due] + [Interest_Due], Currency.Type)
+    Total = Table.AddColumn(Typed, "Installment_Due", each [Principal_Due] + [Interest_Due], Currency.Type),
+    Lk    = Table.NestedJoin(Total, {"Loan_ID"}, fnSheet("Loans"), {"Loan_ID"}, "L", JoinKind.LeftOuter),
+    Mem   = Table.ExpandTableColumn(Lk, "L", {"Member_ID"}),
+    Bucket= Table.AddColumn(Mem, "Schedule_Bucket", each if [Status] = "Paid" then "Paid" else if [Due_Date] < Date.From(DateTime.LocalNow()) then "Overdue" else "Due later", type text)
 in
-    Total
+    Bucket
 
 // ---------------------------------------------------------------------
 // B12 –  query name:  Fact_Repayments
 // ---------------------------------------------------------------------
 let
     Src   = fnSheet("Loan_Repayments"),
-    Keep  = Table.SelectColumns(Src, {"Repayment_ID","Loan_ID","Payment_Date","Principal_Paid","Interest_Paid","Penalty","Total_Paid","Payment_Mode","Receipt_No","Entered_By"}),
+    Keep  = Table.SelectColumns(Src, {"Repayment_ID","Loan_ID","Member_ID","Payment_Date","Principal_Paid","Interest_Paid","Penalty","Total_Paid","Payment_Mode","Receipt_No","Entered_By"}),
     Typed = Table.TransformColumnTypes(Keep, {{"Payment_Date", type date},{"Principal_Paid", Currency.Type},{"Interest_Paid", Currency.Type},
                                                {"Penalty", Currency.Type},{"Total_Paid", Currency.Type}})
 in

@@ -1,0 +1,20 @@
+table Dim_LoanPurpose
+
+	column Purpose_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose_ID
+
+	column Purpose
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose
+
+	partition Dim_LoanPurpose = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Loan_Purposes"),
+			    Typed = Table.TransformColumnTypes(Src, {{"Purpose_ID", type text},{"Purpose", type text}})
+			in
+			    Typed

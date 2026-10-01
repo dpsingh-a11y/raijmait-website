@@ -5,11 +5,25 @@ A working preview of the finished dashboard, built from the same data and the sa
 
 | File | What it is |
 |---|---|
+| `SaiTrust/` (and `SaiTrust_PBIP.zip`) | **Ready-to-open Power BI Project**: `SaiTrust.pbip` with the full model (18 tables, 25 relationships, 94 measures) and a 6-page report with 63 visuals. See section 0 |
+| `make_pbip.py` | Regenerates the `SaiTrust/` project from the two files below |
 | `01_PowerQuery_Import.m` | Power Query for every sheet: one helper function plus 6 dimension and 10 fact queries |
-| `02_DAX_Measures.dax` | Date table, measure table and about 90 measures in six folders |
+| `02_DAX_Measures.dax` | Date table, measure table and 94 measures in six folders |
 | `03_Sai_Trust_Theme.json` | Power BI theme (View > Themes > Browse for themes) |
 | `dashboard.html` | Interactive preview of all six pages |
 | `build_data.py`, `dashboard_template.html` | Regenerate the preview from a new copy of the workbook: `python3 build_data.py <xlsx> data.json`, then paste the JSON into the template at `/*DATA*/` |
+
+## 0. Open the Power BI Project (fastest route)
+
+A `.pbix` file is a compressed binary that only Power BI Desktop can write, so this repo ships the same thing as a **Power BI Project** (`SaiTrust/SaiTrust.pbip`), the text-based format Desktop opens directly.
+
+1. Install the latest Power BI Desktop (Windows). Unzip `SaiTrust_PBIP.zip` and put `Sai_Trust_Data.xlsx` somewhere stable.
+2. File > Options and settings > Options > Preview features: turn on **Power BI Project (.pbip) save option**, **Store semantic model in TMDL format** and **Store reports using enhanced metadata format (PBIR)** (newer versions have these on by default). Restart Desktop.
+3. File > Open report > Browse this device > pick `SaiTrust.pbip`.
+4. Home > Transform data > Edit parameters > set **pFilePath** to the full path of your workbook (default is `C:\SaiTrust\Sai_Trust_Data.xlsx`). Close & Apply to load the data.
+5. **File > Save as** and choose a `.pbix` file. That is your `.pbix`.
+
+The report files were checked against Microsoft's published PBIR schemas (114 files, no errors), and every column and measure the visuals use was cross-checked against the model. The project has **not been opened in Power BI Desktop yet**, because Desktop is not available where it was generated. If Desktop reports an error on opening or refresh, send me the message and I will fix it.
 
 ## 1. Sheets and what each one is
 
@@ -39,7 +53,7 @@ Business flow from the README: Project > Location > SHG > Member; Fund Source > 
 
 ## 2. Import steps
 
-1. In Power BI Desktop, open Transform data and follow the header of `01_PowerQuery_Import.m`: create `pFilePath` (the path to the workbook), then `fnSheet`, then one blank query per block B1 to B16.
+1. In Power BI Desktop, open Transform data and follow the header of `01_PowerQuery_Import.m`: create `pFilePath` (the path to the workbook), then `fnSheet`, then one blank query per block B1 to B16. (The Project in section 0 already contains all of this.)
 2. Close & Apply, then run the DAX from `02_DAX_Measures.dax`: `Dim_Date`, `_Measures`, then the measures.
 
 `fnSheet` handles the messy parts of the workbook: unnamed columns, fully empty columns (several sheets have 10 to 20 stray blank columns), empty rows and padded text.
@@ -51,8 +65,9 @@ Each fact table has exactly one filter path to `Dim_SHG`, so there are no ambigu
 ```
 Dim_Project --< Dim_SHG --< Dim_Member --< Fact_Savings
                     |            |--------< Fact_Withdrawals
-                    |            |--------< Fact_Loans --< Fact_LoanSchedule
-                    |            |               |-------< Fact_Repayments
+                    |            |--------< Fact_Loans
+                    |            |--------< Fact_LoanSchedule
+                    |            |--------< Fact_Repayments
                     |            |--------< Fact_LoanApplications
                     |            '--------< Fact_Agriculture
                     |--------------------< Fact_FundReceipts
@@ -65,6 +80,8 @@ Dim_Date[Date]   --< Savings[Date], Withdrawals[Date], FundReceipts[Receipt_Date
                      Repayments[Payment_Date], Expenses[Expense_Date], Meetings[Meeting_Date],
                      LoanSchedule[Due_Date], LoanApplications[Application_Date], Agriculture[Submit_Date]
 ```
+
+Loan_Schedule and Loan_Repayments link through the member (not through Loans) so that no table has two filter paths from `Dim_Date`. The loan register therefore uses the per-loan measures `Loan Repaid`, `Loan Outstanding` and `Loan Overdue Instalments`, which match on Loan_ID with TREATAS. A purpose slicer filters Loans but not Repayments.
 
 Keep only one active relationship from each fact to `Dim_Date`. Mark `Dim_Date` as the date table.
 

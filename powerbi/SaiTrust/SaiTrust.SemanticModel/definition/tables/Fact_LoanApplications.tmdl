@@ -1,0 +1,62 @@
+table Fact_LoanApplications
+
+	column Application_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Application_ID
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Application_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Application_Date
+
+	column Requested_Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Requested_Amount
+
+	column Purpose
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose
+
+	column Tenure
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Tenure
+
+	column Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Status
+
+	column Approved_Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Approved_Amount
+
+	column Approval_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Approval_Date
+
+	partition Fact_LoanApplications = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Loan_Applications"),
+			    Keep  = Table.SelectColumns(Src, {"Application_ID","Member_ID","Application_Date","Requested_Amount","Purpose","Tenure","Status","Approved_Amount","Approval_Date"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Application_Date", type date},{"Approval_Date", type date},{"Requested_Amount", Currency.Type},
+			                                               {"Approved_Amount", Currency.Type},{"Tenure", Int64.Type}})
+			in
+			    Typed

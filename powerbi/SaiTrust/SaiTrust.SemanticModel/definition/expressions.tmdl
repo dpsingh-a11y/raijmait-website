@@ -1,0 +1,20 @@
+expression pFilePath = "C:\SaiTrust\Sai_Trust_Data.xlsx" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: f72d78fd-0a8b-5455-877f-31beea8ee299
+
+expression fnSheet =
+		(SheetName as text) as table =>
+		let
+		    Source   = Excel.Workbook(File.Contents(pFilePath), null, true),
+		    Sheet    = Source{[Item = SheetName, Kind = "Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars = true]),
+		    // drop columns whose header was empty ("Column12") or that hold no data at all
+		    NamedOnly = Table.SelectColumns(Promoted,
+		                   List.Select(Table.ColumnNames(Promoted), each not Text.StartsWith(_, "Column"))),
+		    NonBlank  = Table.SelectColumns(NamedOnly,
+		                   List.Select(Table.ColumnNames(NamedOnly),
+		                       each List.NonNullCount(Table.Column(NamedOnly, _)) > 0)),
+		    NoEmptyRows = Table.SelectRows(NonBlank, each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+		    Trimmed   = Table.TransformColumns(NoEmptyRows, List.Transform(Table.ColumnNames(NoEmptyRows), (c) => {c, each if _ is text then Text.Trim(_) else _}))
+		in
+		    Trimmed
+	lineageTag: 50580f31-f251-544a-aff5-e2585ac0b90d

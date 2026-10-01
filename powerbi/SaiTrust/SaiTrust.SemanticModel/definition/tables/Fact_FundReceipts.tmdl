@@ -1,0 +1,58 @@
+table Fact_FundReceipts
+
+	column Receipt_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Receipt_ID
+
+	column Receipt_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Receipt_Date
+
+	column SHG_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_ID
+
+	column Fund_Source_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Fund_Source_ID
+
+	column Fund_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Fund_Type
+
+	column Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	column Payment_Mode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Payment_Mode
+
+	column Purpose
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose
+
+	column Entered_By
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Entered_By
+
+	partition Fact_FundReceipts = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Fund_Receipts"),
+			    Keep  = Table.SelectColumns(Src, {"Receipt_ID","Receipt_Date","SHG_ID","Fund_Source_ID","Fund_Type","Amount","Payment_Mode","Purpose","Entered_By"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Receipt_Date", type date},{"Amount", Currency.Type}})
+			in
+			    Typed
