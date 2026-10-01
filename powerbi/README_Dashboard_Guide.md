@@ -5,7 +5,7 @@ A working preview of the finished dashboard, built from the same data and the sa
 
 | File | What it is |
 |---|---|
-| `SaiTrust/` (and `SaiTrust_PBIP.zip`) | **Ready-to-open Power BI Project**: `SaiTrust.pbip` with the full model (18 tables, 25 relationships, 94 measures) and a 6-page report with 63 visuals. See section 0 |
+| `SaiTrust/` (and `SaiTrust_PBIP.zip`) | **Ready-to-open Power BI Project**: `SaiTrust.pbip` with the full model (18 tables, 25 relationships, 94 measures) and a 6-page report with 105 visuals (including slicers and navigation). See section 0 |
 | `make_pbip.py` | Regenerates the `SaiTrust/` project from the two files below |
 | `01_PowerQuery_Import.m` | Power Query for every sheet: one helper function plus 6 dimension and 10 fact queries |
 | `02_DAX_Measures.dax` | Date table, measure table and 94 measures in six folders |
