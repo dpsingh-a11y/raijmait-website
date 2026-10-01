@@ -1,0 +1,270 @@
+table Fact_Agriculture
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Has_Land
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Has_Land
+
+	column Land_Unit
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Land_Unit
+
+	column Own_Land_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Own_Land_Ha
+
+	column Agri_Land_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Agri_Land_Ha
+
+	column Irrigated_Land_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Irrigated_Land_Ha
+
+	column Leased_Land_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Leased_Land_Ha
+
+	column Total_Land_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Total_Land_Ha
+
+	column Farm_Equipment
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Farm_Equipment
+
+	column Cultivated
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Cultivated
+
+	column Crop
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Crop
+
+	column Season
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Season
+
+	column Sowing_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Sowing_Date
+
+	column Sown_Area_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Sown_Area_Ha
+
+	column Seed_Qty_Kg
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Seed_Qty_Kg
+
+	column Validation_Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Validation_Status
+
+	column Seed_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Seed_Type
+
+	column Seed_Source
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Seed_Source
+
+	column Fertilizer
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Fertilizer
+
+	column Insect_Control
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Insect_Control
+
+	column Weed_Management
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Weed_Management
+
+	column Irrigation_Source
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Irrigation_Source
+
+	column Irrigation_Method
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Irrigation_Method
+
+	column Practice_Adopted
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Practice_Adopted
+
+	column Input_Support
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Input_Support
+
+	column Input_Support_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Input_Support_Type
+
+	column Demo_Plot
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Demo_Plot
+
+	column Training
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Training
+
+	column Training_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Training_Type
+
+	column Exposure
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Exposure
+
+	column Exposure_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Exposure_Type
+
+	column Production_Qtl
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Production_Qtl
+
+	column Income
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Income
+
+	column Cultivation_Cost
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Cultivation_Cost
+
+	column Net_Profit
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Net_Profit
+
+	column LY_Crop
+		dataType: string
+		summarizeBy: none
+		sourceColumn: LY_Crop
+
+	column LY_Area_Ha
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: LY_Area_Ha
+
+	column LY_Production_Qtl
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: LY_Production_Qtl
+
+	column LY_Income
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: LY_Income
+
+	column LY_Cost
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: LY_Cost
+
+	column LY_Profit
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: LY_Profit
+
+	column Submit_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Submit_Date
+
+	column Record_ID
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: Record_ID
+
+	partition Fact_Agriculture = m
+		mode: import
+		source =
+			let
+			    Src  = fnSheet("Agriculture"),
+			    Keep = Table.SelectColumns(Src, {
+			        "Member_ID","Do you have agricultural land?","Land Unit","Own Land","Agriable land In Ha","Irrigated Land IN Ha","Leased Land","Total Land",
+			        "Farm Equipment","Did you cultivate crops this year?","Crop Name","Season","Crop Sowning Date","Crop Sown Area","Seeds Quantity In KG",
+			        "Data Validation","Seed Type","Seed Source","Fertilizer Use","Insect Control","Weed Managment","Irrigation Source","Irrigation Method",
+			        "Practices Adopted","Critical Input Support","Critical Input Support Type","Demo Plot","Training Status","Training Types","Exposure Status",
+			        "Exposure Types","Production in quintal","Total Income From Production","Cultivation Cost","Net Profit","Major Crops Grown In Last Year",
+			        "Last Year Area in Ha","Last Year Production","Last Year Total Income From Production","Last Year Total cultivation Cost","Last Year Profit","Data Submit Date"},
+			        MissingField.UseNull),
+			    Ren = Table.RenameColumns(Keep, {
+			        {"Do you have agricultural land?","Has_Land"},{"Land Unit","Land_Unit"},{"Own Land","Own_Land_Ha"},{"Agriable land In Ha","Agri_Land_Ha"},
+			        {"Irrigated Land IN Ha","Irrigated_Land_Ha"},{"Leased Land","Leased_Land_Ha"},{"Total Land","Total_Land_Ha"},{"Farm Equipment","Farm_Equipment"},
+			        {"Did you cultivate crops this year?","Cultivated"},{"Crop Name","Crop"},{"Crop Sowning Date","Sowing_Date"},{"Crop Sown Area","Sown_Area_Ha"},
+			        {"Seeds Quantity In KG","Seed_Qty_Kg"},{"Data Validation","Validation_Status"},{"Seed Type","Seed_Type"},{"Seed Source","Seed_Source"},
+			        {"Fertilizer Use","Fertilizer"},{"Insect Control","Insect_Control"},{"Weed Managment","Weed_Management"},{"Irrigation Source","Irrigation_Source"},
+			        {"Irrigation Method","Irrigation_Method"},{"Practices Adopted","Practice_Adopted"},{"Critical Input Support","Input_Support"},
+			        {"Critical Input Support Type","Input_Support_Type"},{"Demo Plot","Demo_Plot"},{"Training Status","Training"},{"Training Types","Training_Type"},
+			        {"Exposure Status","Exposure"},{"Exposure Types","Exposure_Type"},{"Production in quintal","Production_Qtl"},
+			        {"Total Income From Production","Income"},{"Cultivation Cost","Cultivation_Cost"},{"Net Profit","Net_Profit"},
+			        {"Major Crops Grown In Last Year","LY_Crop"},{"Last Year Area in Ha","LY_Area_Ha"},{"Last Year Production","LY_Production_Qtl"},
+			        {"Last Year Total Income From Production","LY_Income"},{"Last Year Total cultivation Cost","LY_Cost"},{"Last Year Profit","LY_Profit"},
+			        {"Data Submit Date","Submit_Date"}}),
+			    Typed = Table.TransformColumnTypes(Ren, {{"Sowing_Date", type date},{"Submit_Date", type date},
+			        {"Own_Land_Ha", type number},{"Agri_Land_Ha", type number},{"Irrigated_Land_Ha", type number},{"Leased_Land_Ha", type number},{"Total_Land_Ha", type number},
+			        {"Sown_Area_Ha", type number},{"Seed_Qty_Kg", type number},{"Production_Qtl", type number},{"Income", Currency.Type},{"Cultivation_Cost", Currency.Type},
+			        {"Net_Profit", Currency.Type},{"LY_Area_Ha", type number},{"LY_Production_Qtl", type number},{"LY_Income", Currency.Type},{"LY_Cost", Currency.Type},{"LY_Profit", Currency.Type}}),
+			    // fill "no crop" rows so slicers show a label instead of (Blank)
+			    Fill  = Table.ReplaceValue(Typed, null, "No crop this year", Replacer.ReplaceValue, {"Crop","Season"}),
+			    Idx   = Table.AddIndexColumn(Fill, "Record_ID", 1, 1, Int64.Type)
+			in
+			    Idx

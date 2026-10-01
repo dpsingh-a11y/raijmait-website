@@ -1,0 +1,144 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "sv19",
+  "position": {
+    "x": 16.0,
+    "y": 1208,
+    "z": 0,
+    "width": 1248.0,
+    "height": 300,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Fact_FundReceipts"
+                    }
+                  },
+                  "Property": "Receipt_Date"
+                }
+              },
+              "queryRef": "Fact_FundReceipts.Receipt_Date",
+              "nativeQueryRef": "Receipt_Date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_SHG"
+                    }
+                  },
+                  "Property": "SHG_Label"
+                }
+              },
+              "queryRef": "Dim_SHG.SHG_Label",
+              "nativeQueryRef": "SHG_Label"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_FundSource"
+                    }
+                  },
+                  "Property": "Source_Name"
+                }
+              },
+              "queryRef": "Dim_FundSource.Source_Name",
+              "nativeQueryRef": "Source_Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Fact_FundReceipts"
+                    }
+                  },
+                  "Property": "Fund_Type"
+                }
+              },
+              "queryRef": "Fact_FundReceipts.Fund_Type",
+              "nativeQueryRef": "Fund_Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Fact_FundReceipts"
+                    }
+                  },
+                  "Property": "Payment_Mode"
+                }
+              },
+              "queryRef": "Fact_FundReceipts.Payment_Mode",
+              "nativeQueryRef": "Payment_Mode"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Fund Received"
+                }
+              },
+              "queryRef": "_Measures.Fund Received",
+              "nativeQueryRef": "Fund Received"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Fund receipts'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "12D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,68 @@
+table Dim_Date
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: [Date]
+
+	column Year
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: [Year]
+
+	column 'Month No'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: [Month No]
+
+	column Month
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Month]
+		sortByColumn: 'Month No'
+
+	column 'Month Year'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Month Year]
+		sortByColumn: 'Month Year Sort'
+
+	column 'Month Year Sort'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: [Month Year Sort]
+
+	column Quarter
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Quarter]
+
+	column 'Financial Year'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Financial Year]
+
+	column 'Day Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Day Name]
+
+	partition Dim_Date = calculated
+		mode: import
+		source =
+			ADDCOLUMNS (
+			    CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2027, 12, 31 ) ),
+			    "Year",           YEAR ( [Date] ),
+			    "Month No",       MONTH ( [Date] ),
+			    "Month",          FORMAT ( [Date], "MMM" ),
+			    "Month Year",     FORMAT ( [Date], "MMM yyyy" ),
+			    "Month Year Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] ),
+			    "Quarter",        "Q" & QUARTER ( [Date] ),
+			    "Financial Year", IF ( MONTH ( [Date] ) >= 4,
+			                           YEAR ( [Date] ) & "-" & RIGHT ( YEAR ( [Date] ) + 1, 2 ),
+			                           YEAR ( [Date] ) - 1 & "-" & RIGHT ( YEAR ( [Date] ), 2 ) ),
+			    "Day Name",       FORMAT ( [Date], "ddd" )
+			)

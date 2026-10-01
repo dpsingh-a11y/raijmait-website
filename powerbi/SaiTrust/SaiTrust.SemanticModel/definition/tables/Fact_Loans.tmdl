@@ -1,0 +1,89 @@
+table Fact_Loans
+
+	column Loan_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Loan_ID
+
+	column Loan_Number
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Loan_Number
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Loan_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Loan_Date
+
+	column Purpose_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose_ID
+
+	column Principal_Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Principal_Amount
+
+	column Interest_Rate
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: Interest_Rate
+
+	column Interest_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Interest_Type
+
+	column Tenure
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Tenure
+
+	column Installment_Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Installment_Amount
+
+	column Installment_Frequency
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Installment_Frequency
+
+	column First_Due_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: First_Due_Date
+
+	column Loan_Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Loan_Status
+
+	column Approved_By
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Approved_By
+
+	partition Fact_Loans = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Loans"),
+			    Keep  = Table.SelectColumns(Src, {"Loan_ID","Loan_Number","Member_ID","Loan_Date","Purpose_ID","Principal_Amount","Interest_Rate","Interest_Type",
+			                                      "Tenure","Installment_Amount","Installment_Frequency","First_Due_Date","Loan_Status","Approved_By"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Loan_Date", type date},{"First_Due_Date", type date},{"Principal_Amount", Currency.Type},
+			                                               {"Installment_Amount", Currency.Type},{"Interest_Rate", type number},{"Tenure", Int64.Type}})
+			in
+			    Typed

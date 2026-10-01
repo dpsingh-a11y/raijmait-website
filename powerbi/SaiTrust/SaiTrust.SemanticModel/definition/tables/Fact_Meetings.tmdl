@@ -1,0 +1,55 @@
+table Fact_Meetings
+
+	column Meeting_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Meeting_ID
+
+	column SHG_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_ID
+
+	column Meeting_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Meeting_Date
+
+	column Meeting_No
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Meeting_No
+
+	column Facilitator
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Facilitator
+
+	column Total_Members
+		dataType: int64
+		formatString: 0
+		summarizeBy: sum
+		sourceColumn: Total_Members
+
+	column Members_Present
+		dataType: int64
+		formatString: 0
+		summarizeBy: sum
+		sourceColumn: Members_Present
+
+	column Agenda
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Agenda
+
+	partition Fact_Meetings = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("SHG_Meetings"),
+			    Keep  = Table.SelectColumns(Src, {"Meeting_ID","SHG_ID","Meeting_Date","Meeting_No","Facilitator","Total_Members","Members_Present","Agenda"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Meeting_Date", type date},{"Meeting_No", Int64.Type},{"Total_Members", Int64.Type},{"Members_Present", Int64.Type}})
+			in
+			    Typed

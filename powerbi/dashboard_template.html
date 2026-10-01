@@ -1,0 +1,379 @@
+<title>Sai Trust SHG Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout concept: sticky command bar (title, filters, theme) over a page-tab strip; each page is a KPI row, an attention strip, then a grid of chart cards. */
+:root{
+  --bg:#eef0f3; --surface:#fcfcfb; --surface-2:#f4f5f7; --line:#dfe2e7; --grid:#e8eaee;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7d7c78;
+  --accent:#2a78d6; --accent-soft:#e3eefb;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b; --crit-soft:#fbe6e6; --good-soft:#e2f4e2; --warn-soft:#fdf1d3;
+  --seq1:#cde2fb; --seq2:#86b6ef; --seq3:#2a78d6; --seq4:#184f95;
+  --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif; --body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101113; --surface:#1a1a19; --surface-2:#222325; --line:#2d2f33; --grid:#2a2b2e;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#8f8e86; --accent:#3987e5; --accent-soft:#17283d;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --crit-soft:#3a1d1d; --good-soft:#12301a; --warn-soft:#3a2e0c;
+  --seq1:#184f95; --seq2:#256abf; --seq3:#5598e7; --seq4:#b7d3f6; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#101113; --surface:#1a1a19; --surface-2:#222325; --line:#2d2f33; --grid:#2a2b2e;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#8f8e86; --accent:#3987e5; --accent-soft:#17283d;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --crit-soft:#3a1d1d; --good-soft:#12301a; --warn-soft:#3a2e0c;
+  --seq1:#184f95; --seq2:#256abf; --seq3:#5598e7; --seq4:#b7d3f6; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;margin:0;padding-inline:16px}
+.wrap{max-width:1360px;margin-inline:auto;padding-block:0 40px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-block:14px 0;border-bottom:1px solid var(--line)}
+.bar-top{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-family:var(--display);font-size:24px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink-3);font-size:12px;margin-top:3px}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--warn-soft);color:var(--ink);font-size:11px;font-weight:600;margin-left:6px;vertical-align:2px;border:1px solid var(--warn)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:12px}
+.filters label{display:flex;flex-direction:column;font-size:11px;color:var(--ink-3);gap:3px;text-transform:uppercase;letter-spacing:.06em;min-width:0}
+select,button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+select{max-width:210px}
+button{cursor:pointer}button:hover,select:hover{border-color:var(--ink-3)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:2px;overflow-x:auto;margin-top:12px;scrollbar-width:none}
+.tab{flex:none;border:0;background:none;border-radius:6px 6px 0 0;padding:9px 14px;color:var(--ink-2);font-weight:500;white-space:nowrap;border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.page{display:none;padding-top:18px}.page.on{display:block}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:8px;background:var(--crit-soft);border:1px solid var(--crit);margin-bottom:16px}
+.alert.ok{background:var(--good-soft);border-color:var(--good)}
+.alert b{font-weight:600}
+.ico{flex:none;width:18px;height:18px;border-radius:50%;background:var(--crit);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;margin-top:1px}
+.alert.ok .ico{background:var(--good)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+@media (min-width:900px){.tiles[data-c="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}.tiles[data-c="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.tile .l{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--display);font-size:28px;font-weight:700;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile .n{font-size:12px;color:var(--ink-2);margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column}
+.card.wide{grid-column:1/-1}
+.card header{display:flex;justify-content:space-between;gap:8px;align-items:start;margin-bottom:8px}
+.card h3{font-size:14px;font-weight:600;margin:0}
+.card .d{font-size:12px;color:var(--ink-3);margin-top:1px}
+.tv{font-size:11px;padding:2px 8px;color:var(--ink-2)}
+.plot{position:relative;height:260px;min-width:0}
+.tbl{overflow:auto;max-height:300px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600;position:sticky;top:0;background:var(--surface);cursor:pointer}
+td.r,th.r{text-align:right}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:500}
+.pill i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.p-crit{background:var(--crit-soft)}.p-crit i{background:var(--crit)}
+.p-good{background:var(--good-soft)}.p-good i{background:var(--good)}
+.p-warn{background:var(--warn-soft)}.p-warn i{background:var(--warn)}
+.bar-cell{display:flex;align-items:center;gap:8px}.meter{flex:1;min-width:50px;height:6px;border-radius:3px;background:var(--grid);overflow:hidden}.meter b{display:block;height:100%;background:var(--s1)}
+.notes li{margin-bottom:8px}.notes{max-width:78ch;color:var(--ink-2);padding-left:18px}
+.foot{color:var(--ink-3);font-size:12px;margin-top:24px}
+@media (max-width:560px){h1{font-size:20px}.tile .v{font-size:23px}}
+@media (prefers-reduced-motion:no-preference){.page.on{animation:in .18s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="bar-top">
+      <div>
+        <h1>Sai Trust SHG Dashboard<span class="chip">Sample data</span></h1>
+        <div class="sub" id="asof"></div>
+      </div>
+      <button id="theme" type="button" aria-label="Toggle light or dark theme">Theme</button>
+    </div>
+    <div class="filters" role="group" aria-label="Filters">
+      <label>Project<select id="f-project"></select></label>
+      <label>State<select id="f-state"></select></label>
+      <label>District<select id="f-district"></select></label>
+      <label>SHG<select id="f-shg"></select></label>
+      <button id="reset" type="button">Reset</button>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+  <main id="main"></main>
+  <div class="foot">Source: Sai_Trust_Data.xlsx, 22 sheets. All names, accounts and amounts in the workbook are fictional test data. Amounts in Indian rupees.</div>
+</div>
+
+<script>
+const D = /*DATA*/;
+const TODAY = new Date(); const TODAY_ISO = TODAY.toISOString().slice(0,10);
+const $ = (s,r=document)=>r.querySelector(s);
+const CSS = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const sum=(a,f)=>a.reduce((t,x)=>t+(+f(x)||0),0);
+const nf=new Intl.NumberFormat('en-IN',{maximumFractionDigits:0});
+const inr=v=>'₹'+nf.format(Math.round(v||0));
+const short=v=>{const a=Math.abs(v);const s=v<0?'-':'';return a>=1e7?s+'₹'+(a/1e7).toFixed(2)+' Cr':a>=1e5?s+'₹'+(a/1e5).toFixed(2)+' L':a>=1e3?s+'₹'+(a/1e3).toFixed(1)+' K':s+'₹'+Math.round(a)};
+const pct=(a,b,d=0)=>b?(100*a/b).toFixed(d)+'%':'–';
+const num=(v,d=1)=>(v==null||isNaN(v))?'–':Number(v).toLocaleString('en-IN',{maximumFractionDigits:d});
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mlabel=k=>MON[+k.slice(5)-1]+' '+k.slice(2,4);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- lookups ---------- */
+const shgBy=Object.fromEntries(D.shgs.map(s=>[s.SHG_ID,s]));
+const memBy=Object.fromEntries(D.members.map(m=>[m.Member_ID,m]));
+const loanBy=Object.fromEntries(D.loans.map(l=>[l.Loan_ID,l]));
+D.shgs.forEach(s=>s.Label=s.SHG_Name+' ('+s.SHG_ID+')');
+D.agri.forEach(a=>{a.SHG_ID=a.SHG_ID||(memBy[a.Member_ID]||{}).SHG_ID});
+D.savings.forEach(r=>r.SHG_ID=r.SHG_ID||(memBy[r.Member_ID]||{}).SHG_ID);
+
+/* ---------- filters ---------- */
+const F={project:'',state:'',district:'',shg:''};
+const uniq=a=>[...new Set(a)].sort();
+function fillSelect(id,opts,val,all){const el=$(id);el.innerHTML='<option value="">'+all+'</option>'+opts.map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join('');el.value=val}
+function shgPool(skip){return D.shgs.filter(s=>(skip==='project'||!F.project||s.Project===F.project)&&(skip==='state'||!F.state||s.State===F.state)&&(skip==='district'||!F.district||s.District===F.district))}
+function buildFilters(){
+  fillSelect('#f-project',uniq(shgPool('project').map(s=>s.Project)).map(x=>[x,x]),F.project,'All projects');
+  fillSelect('#f-state',uniq(shgPool('state').map(s=>s.State)).map(x=>[x,x]),F.state,'All states');
+  fillSelect('#f-district',uniq(shgPool('district').map(s=>s.District)).map(x=>[x,x]),F.district,'All districts');
+  fillSelect('#f-shg',shgPool().sort((a,b)=>a.Label.localeCompare(b.Label)).map(s=>[s.SHG_ID,s.Label]),F.shg,'All SHGs');
+}
+let V; // filtered view
+function view(){
+  const ok=new Set(shgPool().filter(s=>!F.shg||s.SHG_ID===F.shg).map(s=>s.SHG_ID));
+  const f=a=>a.filter(r=>ok.has(r.SHG_ID));
+  const loans=f(D.loans); const lid=new Set(loans.map(l=>l.Loan_ID));
+  V={ok,shgs:D.shgs.filter(s=>ok.has(s.SHG_ID)),members:f(D.members),savings:f(D.savings),withdrawals:f(D.withdrawals),funds:f(D.funds),loans,
+     schedule:D.schedule.filter(r=>lid.has(r.Loan_ID)),repayments:D.repayments.filter(r=>lid.has(r.Loan_ID)),apps:f(D.applications),expenses:f(D.expenses),meetings:f(D.meetings),agri:f(D.agri)};
+  // loan-level derived
+  V.loans.forEach(l=>{
+    l.paid=sum(V.repayments.filter(r=>r.Loan_ID===l.Loan_ID),r=>r.Principal_Paid);
+    l.out=l.Principal_Amount-l.paid;
+    const od=V.schedule.filter(r=>r.Loan_ID===l.Loan_ID&&r.Status==='Pending'&&r.Due_Date<TODAY_ISO);
+    l.odN=od.length; l.odAmt=sum(od,r=>r.Principal_Due);
+    l.member=(memBy[l.Member_ID]||{}).Member_Name; l.shg=(shgBy[l.SHG_ID]||{}).Label;
+  });
+  const M=(V.m={});
+  M.savings=sum(V.savings,r=>r.Amount); M.wd=sum(V.withdrawals,r=>r.Amount); M.net=M.savings-M.wd;
+  M.funds=sum(V.funds,r=>r.Amount); M.exp=sum(V.expenses,r=>r.Amount);
+  M.disb=sum(V.loans,l=>l.Principal_Amount); M.pcol=sum(V.repayments,r=>r.Principal_Paid); M.icol=sum(V.repayments,r=>r.Interest_Paid);
+  M.pen=sum(V.repayments,r=>r.Penalty); M.tcol=sum(V.repayments,r=>r.Total_Paid); M.out=M.disb-M.pcol;
+  M.dueToDate=sum(V.schedule.filter(r=>r.Due_Date<=TODAY_ISO),r=>r.Principal_Due);
+  const odRows=V.schedule.filter(r=>r.Status==='Pending'&&r.Due_Date<TODAY_ISO);
+  M.odAmt=sum(odRows,r=>r.Principal_Due); M.odN=odRows.length; M.odLoans=new Set(odRows.map(r=>r.Loan_ID)).size;
+  M.par=M.out?M.odAmt/M.out:0; M.repay=M.dueToDate?M.pcol/M.dueToDate:0;
+  M.cash=M.funds+M.savings+M.tcol-M.wd-M.disb-M.exp;
+  M.borrowers=new Set(V.loans.map(l=>l.Member_ID)).size;
+  M.mem=V.members.length; M.fem=V.members.filter(m=>m.Gender==='Female').length;
+  M.att=sum(V.meetings,r=>r.Members_Present)/Math.max(1,sum(V.meetings,r=>r.Total_Members));
+}
+
+/* ---------- chart helpers ---------- */
+const charts={}, tdata={};
+const valueLabels={id:'valueLabels',afterDatasetsDraw(ch,_,o){
+  if(!o||!o.fmt)return;const {ctx}=ch;ctx.save();ctx.font='500 11px '+CSS('--body');ctx.fillStyle=CSS('--ink-2');ctx.textBaseline='middle';
+  ch.getDatasetMeta(0).data.forEach((b,i)=>{const v=ch.data.datasets[0].data[i];if(v==null)return;
+    if(ch.options.indexAxis==='y'){ctx.textAlign='left';ctx.fillText(o.fmt(v),b.x+6,b.y)}else{ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(o.fmt(v),b.x,b.y-4)}});ctx.restore()}};
+Chart.register(valueLabels);
+function card(id,title,desc,cls=''){return `<section class="card ${cls}" data-c="${id}"><header><div><h3>${title}</h3>${desc?`<div class="d">${desc}</div>`:''}</div><button class="tv" type="button" aria-pressed="false">Table</button></header><div class="plot"><canvas id="${id}" role="img" aria-label="${esc(title)}"></canvas></div><div class="tbl" hidden></div></section>`}
+function mk(id,type,labels,sets,o={}){
+  if(charts[id])charts[id].destroy();
+  const horiz=o.horiz, multi=sets.length>1;
+  const el=document.getElementById(id); if(!el)return;
+  const n=labels.length; if(horiz)el.parentElement.style.height=Math.max(150,n*28+44)+'px';
+  const grid=CSS('--grid'), ink=CSS('--ink-2'), surf=CSS('--surface');
+  const ds=sets.map((s,i)=>({label:s.label,data:s.data,backgroundColor:s.color||CSS('--s'+(i+1)),borderColor:type==='line'?(s.color||CSS('--s'+(i+1))):surf,
+    borderWidth:type==='line'?2:(o.stacked?2:0),borderRadius:type==='bar'?(o.stacked?0:4):0,borderSkipped:'start',maxBarThickness:o.stacked||multi?22:20,
+    pointRadius:type==='line'?3:0,pointHoverRadius:5,tension:.25,fill:false,pointBackgroundColor:s.color||CSS('--s'+(i+1)),stack:s.stack}));
+  const money=o.money!==false&&!o.pct;
+  const fmt=o.fmt||(o.pct?(v=>v.toFixed(0)+'%'):money?short:(v=>num(v)));
+  const axis=ax=>{const val=(ax==='x')===!!horiz;           // is this the value axis?
+    const t={color:ink,font:{size:11}};
+    if(val){t.callback=v=>fmt(v);t.maxTicksLimit=6;t.maxRotation=0}else if(ax==='x'){t.maxRotation=40;t.autoSkip=true}
+    else{t.callback=function(v){const l=String(this.getLabelForValue(v));return l.length>24?l.slice(0,23)+'…':l}}
+    return {stacked:!!o.stacked,beginAtZero:true,max:val?o.max:undefined,border:{display:false},grid:{display:val,color:grid},ticks:t}};
+  charts[id]=new Chart(el,{type,data:{labels,datasets:ds},options:{
+    indexAxis:horiz?'y':'x',responsive:true,maintainAspectRatio:false,
+    interaction:{mode:type==='line'?'index':'nearest',axis:horiz?'y':'x',intersect:false},
+    layout:{padding:{right:horiz?46:8,top:horiz?0:14}},
+    scales:{x:axis('x'),y:axis('y')},
+    plugins:{legend:{display:multi,position:'top',align:'start',labels:{color:ink,usePointStyle:true,boxWidth:8,boxHeight:8,font:{size:12}}},
+      tooltip:{backgroundColor:surf,titleColor:CSS('--ink'),bodyColor:ink,borderColor:CSS('--line'),borderWidth:1,padding:10,
+        callbacks:{label:c=>' '+(c.dataset.label&&multi?c.dataset.label+': ':'')+(o.tip?o.tip(c.parsed[horiz?'x':'y']):fmt(c.parsed[horiz?'x':'y']))}},
+      valueLabels:(!multi&&o.labels!==false&&n<=14)?{fmt:o.tip||fmt}:{}}}});
+  tdata[id]={labels,sets,fmt:o.tip||fmt};
+  const t=document.querySelector(`[data-c="${id}"] .tbl`);if(t&&!t.hidden)fillTable(id)
+}
+function fillTable(id){const {labels,sets,fmt}=tdata[id];const t=document.querySelector(`[data-c="${id}"] .tbl`);
+  t.innerHTML='<table><thead><tr><th></th>'+sets.map(s=>`<th class="r">${esc(s.label||'Value')}</th>`).join('')+'</tr></thead><tbody>'+labels.map((l,i)=>`<tr><td>${esc(l)}</td>${sets.map(s=>`<td class="r">${s.data[i]==null?'–':fmt(s.data[i])}</td>`).join('')}</tr>`).join('')+'</tbody></table>'}
+document.addEventListener('click',e=>{const b=e.target.closest('.tv');if(!b)return;const c=b.closest('.card'),id=c.dataset.c,t=c.querySelector('.tbl'),p=c.querySelector('.plot');
+  const on=t.hidden;t.hidden=!on;p.hidden=on;b.textContent=on?'Chart':'Table';b.setAttribute('aria-pressed',on);if(on)fillTable(id)});
+
+const group=(rows,kf,vf)=>{const m=new Map();rows.forEach(r=>{const k=kf(r);if(k==null)return;m.set(k,(m.get(k)||0)+(+vf(r)||0))});return [...m.entries()]};
+const topN=(e,n=10,desc=true)=>e.sort((a,b)=>desc?b[1]-a[1]:a[1]-b[1]).slice(0,n);
+const tiles=(id,arr)=>{const el=$(id);const h=arr.join('');el.dataset.c=((h.match(/class="tile"/g)||[]).length%4===0)?4:3;el.innerHTML=h};
+const tile=(l,v,n)=>`<div class="tile"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${n||'&nbsp;'}</div></div>`;
+const months=(a,b)=>{const out=[];let [y,m]=[+a.slice(0,4),+a.slice(5)];while(y*12+m<=(+b.slice(0,4))*12+(+b.slice(5))){out.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++}}return out};
+const pill=(c,t)=>`<span class="pill p-${c}"><i></i>${t}</span>`;
+function table(el,cols,rows,sortKey,desc=true){
+  let key=sortKey,dsc=desc;
+  const draw=()=>{const r=[...rows].sort((a,b)=>{const x=a[key],y=b[key];return (typeof x==='number'?x-y:String(x).localeCompare(String(y)))*(dsc?-1:1)});
+    el.innerHTML='<table><thead><tr>'+cols.map(c=>`<th class="${c.r?'r':''}" data-k="${c.k}">${c.h}${c.k===key?(dsc?' ↓':' ↑'):''}</th>`).join('')+'</tr></thead><tbody>'+
+      r.map(x=>'<tr>'+cols.map(c=>`<td class="${c.r?'r':''}">${c.f?c.f(x):esc(x[c.k])}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+    el.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k===key)dsc=!dsc;else{key=k;dsc=true}draw()})};
+  draw()}
+
+/* ---------- pages ---------- */
+const PAGES=[
+ {id:'overview',name:'Overview',html:()=>`<div id="ov-alert"></div><div class="tiles" id="ov-tiles"></div><div class="grid">
+   ${card('c-flow','Monthly money flow','Savings, loans given and repayments received','wide')}
+   ${card('c-fundtype','Funds received by type','Grants and seed money reaching SHGs')}
+   ${card('c-purpose','Loans by purpose','Amount disbursed')}
+   ${card('c-district','SHGs by district','Where the groups are')}
+   ${card('c-project','Funds received by project','Which projects have put money in')}</div>`,
+  draw(){const m=V.m;
+   $('#ov-alert').innerHTML=m.odN?`<div class="alert"><span class="ico">!</span><div><b>${m.odN} instalments worth ${inr(m.odAmt)} are overdue</b> across ${m.odLoans} loans, ${pct(m.odAmt,m.out,1)} of the outstanding portfolio. Open the Loans page for the list.</div></div>`:`<div class="alert ok"><span class="ico">✓</span><div><b>No overdue instalments</b> in the selected groups.</div></div>`;
+   tiles('#ov-tiles',[tile('SHGs',V.shgs.length,num(m.mem,0)+' members, '+pct(m.fem,m.mem)+' women'),tile('Net savings',short(m.net),short(m.savings)+' saved, '+short(m.wd)+' withdrawn')+
+     tile('Funds received',short(m.funds),V.funds.length+' receipts'),tile('Loans given',short(m.disb),V.loans.length+' loans, '+m.borrowers+' borrowers')+
+     tile('Outstanding',short(m.out),short(m.pcol)+' principal repaid'),tile('Repayment rate',pct(m.pcol,m.dueToDate),'of principal due so far')+
+     tile('Portfolio at risk',pct(m.odAmt,m.out,1),'overdue ÷ outstanding'),tile('Est. cash position',short(m.cash),'funds + savings + repayments − payouts')]);
+   const ks=[...V.savings.map(r=>r.Date),...V.loans.map(r=>r.Loan_Date),...V.repayments.map(r=>r.Payment_Date)].filter(Boolean).map(d=>d.slice(0,7)).sort();
+   const ms=ks.length?months(ks[0],ks[ks.length-1]):[];const by=(rows,df,vf)=>{const g=new Map(group(rows,r=>df(r).slice(0,7),vf));return ms.map(k=>g.get(k)||0)};
+   mk('c-flow','line',ms.map(mlabel),[{label:'Savings',data:by(V.savings,r=>r.Date,r=>r.Amount)},{label:'Loans given',data:by(V.loans,r=>r.Loan_Date,r=>r.Principal_Amount)},{label:'Repayments',data:by(V.repayments,r=>r.Payment_Date,r=>r.Total_Paid)}]);
+   let e=topN(group(V.funds,r=>r.Fund_Type,r=>r.Amount));mk('c-fundtype','bar',e.map(x=>x[0]),[{label:'Received',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(V.loans,l=>l.Purpose,l=>l.Principal_Amount));mk('c-purpose','bar',e.map(x=>x[0]),[{label:'Disbursed',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(V.shgs,s=>s.District,()=>1));mk('c-district','bar',e.map(x=>x[0]),[{label:'SHGs',data:e.map(x=>x[1])}],{horiz:1,money:false});
+   const pj=Object.fromEntries(V.shgs.map(s=>[s.SHG_ID,s.Project]));e=topN(group(V.funds,r=>pj[r.SHG_ID],r=>r.Amount));mk('c-project','bar',e.map(x=>x[0]),[{label:'Received',data:e.map(x=>x[1])}],{horiz:1});}},
+
+ {id:'savings',name:'Savings & Funds',html:()=>`<div class="tiles" id="sv-tiles"></div><div class="grid">
+   ${card('c-sv-m','Savings and withdrawals by month','Money in and money taken out','wide')}
+   ${card('c-sv-shg','Net savings by SHG','Top 10 groups')}
+   ${card('c-wd','Withdrawals by reason','Why members took savings out')}
+   ${card('c-src','Funds by source','Who is funding the groups')}
+   ${card('c-exp','Expenses by category','What the groups spend on')}
+   <section class="card wide"><header><div><h3>Largest fund receipts</h3><div class="d">Click a column to sort</div></div></header><div class="tbl" id="fund-tbl" style="max-height:340px"></div></section></div>`,
+  draw(){const m=V.m;
+   tiles('#sv-tiles',[tile('Total savings',short(m.savings),V.savings.length+' entries'),tile('Withdrawals',short(m.wd),pct(m.wd,m.savings,1)+' of savings'),tile('Net savings',short(m.net),short(m.net/Math.max(1,m.mem))+' per member')+
+     tile('Funds received',short(m.funds),new Set(V.funds.map(r=>r.Fund_Source_ID)).size+' sources'),tile('Expenses',short(m.exp),pct(m.exp,m.funds,1)+' of funds'),tile('Funds per SHG',short(m.funds/Math.max(1,V.shgs.length)),'average')]);
+   const ks=[...V.savings.map(r=>r.Date),...V.withdrawals.map(r=>r.Date)].map(d=>d.slice(0,7)).sort();const ms=ks.length?months(ks[0],ks[ks.length-1]):[];
+   const by=(rows)=>{const g=new Map(group(rows,r=>r.Date.slice(0,7),r=>r.Amount));return ms.map(k=>g.get(k)||0)};
+   mk('c-sv-m','bar',ms.map(mlabel),[{label:'Savings',data:by(V.savings)},{label:'Withdrawals',data:by(V.withdrawals),color:CSS('--s2')}]);
+   const wdBy=new Map(group(V.withdrawals,r=>r.SHG_ID,r=>r.Amount));let e=topN(group(V.savings,r=>r.SHG_ID,r=>r.Amount).map(([k,v])=>[(shgBy[k]||{}).Label||k,v-(wdBy.get(k)||0)]));
+   mk('c-sv-shg','bar',e.map(x=>x[0]),[{label:'Net savings',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(V.withdrawals,r=>r.Reason,r=>r.Amount));mk('c-wd','bar',e.map(x=>x[0]),[{label:'Withdrawn',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(V.funds,r=>r.Source,r=>r.Amount));mk('c-src','bar',e.map(x=>x[0]),[{label:'Received',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(V.expenses,r=>r.Category,r=>r.Amount));mk('c-exp','bar',e.map(x=>x[0]),[{label:'Spent',data:e.map(x=>x[1])}],{horiz:1});
+   table($('#fund-tbl'),[{k:'Receipt_Date',h:'Date'},{k:'shg',h:'SHG'},{k:'Source',h:'Source'},{k:'Fund_Type',h:'Type'},{k:'Payment_Mode',h:'Mode'},{k:'Amount',h:'Amount',r:1,f:x=>inr(x.Amount)}],
+     V.funds.map(r=>({...r,shg:(shgBy[r.SHG_ID]||{}).Label})),'Amount')}},
+
+ {id:'loans',name:'Loans',html:()=>`<div id="ln-alert"></div><div class="tiles" id="ln-tiles"></div><div class="grid">
+   ${card('c-sched','Instalments by due month','Paid, due later and overdue (as of today)','wide')}
+   ${card('c-lshg','Outstanding principal by SHG','Top 10 groups')}
+   ${card('c-apps','Loan applications','Requested and approved amounts, by status')}
+   ${card('c-lpurp','Loans by purpose','Amount disbursed')}
+   ${card('c-ltype','Repayment mix','Principal, interest and penalty collected')}
+   <section class="card wide"><header><div><h3>Loan register</h3><div class="d">Click a column to sort</div></div></header><div class="tbl" id="loan-tbl" style="max-height:420px"></div></section></div>`,
+  draw(){const m=V.m;
+   $('#ln-alert').innerHTML=m.odN?`<div class="alert"><span class="ico">!</span><div><b>${m.odLoans} of ${V.loans.length} loans have overdue instalments</b> (${m.odN} instalments, ${inr(m.odAmt)} principal). Portfolio at risk is ${pct(m.odAmt,m.out,1)}.</div></div>`:'';
+   const ap=V.apps;
+   tiles('#ln-tiles',[tile('Loans given',short(m.disb),V.loans.length+' loans'),tile('Outstanding',short(m.out),'principal still to recover'),tile('Collected',short(m.tcol),short(m.icol)+' interest, '+short(m.pen)+' penalty')+
+     tile('Repayment rate',pct(m.pcol,m.dueToDate),'principal paid ÷ due'),tile('Portfolio at risk',pct(m.odAmt,m.out,1),m.odN+' overdue instalments'),tile('Average loan',short(m.disb/Math.max(1,V.loans.length)),m.borrowers+' borrowers, '+pct(m.borrowers,m.mem)+' of members')+
+     tile('Due in 30 days',short(sum(V.schedule.filter(r=>r.Status==='Pending'&&r.Due_Date>=TODAY_ISO&&r.Due_Date<=new Date(TODAY.getTime()+2592e6).toISOString().slice(0,10)),r=>r.Principal_Due+r.Interest_Due)),'pending instalments'),tile('Approval rate',pct(ap.filter(a=>a.Status==='Approved').length,ap.length),ap.filter(a=>a.Status==='Pending').length+' pending of '+ap.length)]);
+   const sc=V.schedule;const ms=sc.length?months(sc.map(r=>r.Due_Date.slice(0,7)).sort()[0],sc.map(r=>r.Due_Date.slice(0,7)).sort().slice(-1)[0]):[];
+   const cls=r=>r.Status==='Paid'?'p':(r.Due_Date<TODAY_ISO?'o':'u');const g=(k)=>ms.map(x=>sum(sc.filter(r=>r.Due_Date.slice(0,7)===x&&cls(r)===k),r=>r.Principal_Due+r.Interest_Due));
+   mk('c-sched','bar',ms.map(mlabel),[{label:'Paid',data:g('p'),color:CSS('--s3')},{label:'Due later',data:g('u'),color:CSS('--seq2')},{label:'Overdue',data:g('o'),color:'#d03b3b'}],{stacked:1});
+   let e=topN(group(V.loans,l=>l.shg,l=>l.out));mk('c-lshg','bar',e.map(x=>x[0]),[{label:'Outstanding',data:e.map(x=>x[1])}],{horiz:1});
+   const st=['Approved','Pending'];mk('c-apps','bar',st,[{label:'Requested',data:st.map(s=>sum(ap.filter(a=>a.Status===s),a=>a.Requested_Amount))},{label:'Approved',data:st.map(s=>sum(ap.filter(a=>a.Status===s),a=>a.Approved_Amount)),color:CSS('--s3')}]);
+   e=topN(group(V.loans,l=>l.Purpose,l=>l.Principal_Amount));mk('c-lpurp','bar',e.map(x=>x[0]),[{label:'Disbursed',data:e.map(x=>x[1])}],{horiz:1});
+   mk('c-ltype','bar',['Principal','Interest','Penalty'],[{label:'Collected',data:[m.pcol,m.icol,m.pen]}]);
+   table($('#loan-tbl'),[{k:'Loan_ID',h:'Loan'},{k:'member',h:'Member'},{k:'shg',h:'SHG'},{k:'Purpose',h:'Purpose'},{k:'Principal_Amount',h:'Principal',r:1,f:x=>inr(x.Principal_Amount)},
+     {k:'paid',h:'Repaid',r:1,f:x=>`<div class="bar-cell"><div class="meter"><b style="width:${100*x.paid/x.Principal_Amount}%"></b></div>${pct(x.paid,x.Principal_Amount)}</div>`},
+     {k:'out',h:'Outstanding',r:1,f:x=>inr(x.out)},{k:'Interest_Rate',h:'Rate',r:1,f:x=>x.Interest_Rate+'%'},
+     {k:'odN',h:'Status',f:x=>x.odN?pill('crit','Overdue · '+x.odN+' inst.'):pill('good','On track')}],V.loans,'odAmt')}},
+
+ {id:'shgs',name:'SHGs & Members',html:()=>`<div class="tiles" id="sh-tiles"></div><div class="grid">
+   ${card('c-mem','Members per SHG','Registered members, top 12')}
+   ${card('c-age','Members by age group','Age as of today')}
+   ${card('c-form','SHGs formed over time','Cumulative count by formation month')}
+   ${card('c-att','Meeting attendance by SHG','Members present ÷ members recorded, lowest first')}
+   <section class="card wide"><header><div><h3>SHG scorecard</h3><div class="d">Savings, loans and attendance side by side. Click a column to sort</div></div></header><div class="tbl" id="shg-tbl" style="max-height:440px"></div></section></div>`,
+  draw(){const m=V.m;
+   tiles('#sh-tiles',[tile('SHGs',V.shgs.length,new Set(V.shgs.map(s=>s.Village_Name)).size+' villages'),tile('Members',m.mem,pct(m.fem,m.mem)+' women'),tile('Avg group size',num(m.mem/Math.max(1,V.shgs.length)),'members per SHG')+
+     tile('Meetings held',V.meetings.length,num(V.meetings.length/Math.max(1,V.shgs.length),1)+' per SHG'),tile('Attendance',pct(sum(V.meetings,r=>r.Members_Present),sum(V.meetings,r=>r.Total_Members)),'see data notes'),tile('Districts',new Set(V.shgs.map(s=>s.District)).size,new Set(V.shgs.map(s=>s.State)).size+' states')]);
+   const cnt=new Map(group(V.members,r=>r.SHG_ID,()=>1));let e=topN(V.shgs.map(s=>[s.Label,cnt.get(s.SHG_ID)||0]),12);
+   mk('c-mem','bar',e.map(x=>x[0]),[{label:'Members',data:e.map(x=>x[1])}],{horiz:1,money:false});
+   const ag=r=>{if(!r.DOB)return'Unknown';const a=(TODAY-new Date(r.DOB))/31557600000;return a<25?'18–24':a<35?'25–34':a<45?'35–44':a<60?'45–59':'60+'};
+   const order=['18–24','25–34','35–44','45–59','60+'];const gm=new Map(group(V.members,ag,()=>1));mk('c-age','bar',order,[{label:'Members',data:order.map(k=>gm.get(k)||0)}],{money:false});
+   const fk=V.shgs.map(s=>s.Formation_Date.slice(0,7)).sort();const fm=fk.length?months(fk[0],fk[fk.length-1]):[];let run=0;const fg=new Map(group(V.shgs,s=>s.Formation_Date.slice(0,7),()=>1));
+   mk('c-form','line',fm.map(mlabel),[{label:'SHGs formed (cumulative)',data:fm.map(k=>run+=fg.get(k)||0)}],{money:false});
+   const att=V.shgs.map(s=>{const r=V.meetings.filter(x=>x.SHG_ID===s.SHG_ID);return r.length?[s.Label,100*sum(r,x=>x.Members_Present)/sum(r,x=>x.Total_Members)]:null}).filter(Boolean);
+   e=topN(att,12,false);mk('c-att','bar',e.map(x=>x[0]),[{label:'Attendance',data:e.map(x=>x[1])}],{horiz:1,pct:1,max:100});
+   const wd=new Map(group(V.withdrawals,r=>r.SHG_ID,r=>r.Amount));
+   const rows=V.shgs.map(s=>{const lo=V.loans.filter(l=>l.SHG_ID===s.SHG_ID),mt=V.meetings.filter(x=>x.SHG_ID===s.SHG_ID);
+     return {Label:s.Label,District:s.District,Project:s.Project,mem:cnt.get(s.SHG_ID)||0,sav:sum(V.savings.filter(r=>r.SHG_ID===s.SHG_ID),r=>r.Amount)-(wd.get(s.SHG_ID)||0),
+       out:sum(lo,l=>l.out),od:sum(lo,l=>l.odAmt),att:mt.length?sum(mt,x=>x.Members_Present)/sum(mt,x=>x.Total_Members):-1}});
+   table($('#shg-tbl'),[{k:'Label',h:'SHG'},{k:'District',h:'District'},{k:'Project',h:'Project'},{k:'mem',h:'Members',r:1},{k:'sav',h:'Net savings',r:1,f:x=>inr(x.sav)},
+     {k:'out',h:'Loan outstanding',r:1,f:x=>inr(x.out)},{k:'od',h:'Overdue',r:1,f:x=>x.od?pill('crit',inr(x.od)):'–'},{k:'att',h:'Attendance',r:1,f:x=>x.att<0?'–':Math.round(x.att*100)+'%'}],rows,'sav')}},
+
+ {id:'agri',name:'Agriculture',html:()=>`<div class="tiles" id="ag-tiles"></div><div class="grid">
+   ${card('c-crop-p','Net profit by crop','Total net profit across survey records, top 12','wide')}
+   ${card('c-crop-a','Area sown by crop (ha)','Top 10 crops')}
+   ${card('c-season','Net profit by season','Kharif, Rabi and Zaid')}
+   ${card('c-adopt','Programme reach','Share of survey records answering Yes')}
+   ${card('c-train','Average profit per cultivating record','With and without training')}
+   ${card('c-yoy','Profit this year vs last year','Across the same records')}
+   ${card('c-irr','Irrigation source','Records by source')}
+   ${card('c-meth','Irrigation method','Records by method')}
+   ${card('c-prac','Practices adopted','Records by practice')}
+   ${card('c-seed','Seed source','Where seed comes from')}</div>`,
+  draw(){const A=V.agri,C=A.filter(a=>a.Cultivated==='Yes');
+   const inc=sum(A,a=>a.Income),cost=sum(A,a=>a.Cost),pf=sum(A,a=>a.Profit),area=sum(A,a=>a.Area),pr=sum(A,a=>a.Production);
+   tiles('#ag-tiles',[tile('Farmers surveyed',new Set(A.map(a=>a.Member_ID)).size,A.length+' survey records'),tile('Area sown',num(area,1)+' ha',num(pr,0)+' quintal produced'),tile('Crop income',short(inc),'cost '+short(cost))+
+     tile('Net profit',short(pf),pct(pf,inc)+' margin'),tile('Benefit–cost ratio',cost?(inc/cost).toFixed(2):'–','income ÷ cost'),tile('Yield',area?num(pr/area,1):'–','quintal per ha')+
+     tile('Training reach',pct(A.filter(a=>a.Training==='Yes').length,A.length),'of survey records'),tile('Irrigated land',pct(sum(A,a=>a.Irrigated),sum(A,a=>a.Agri)),'of agricultural land')]);
+   const lab=(rows,k)=>group(rows,a=>a[k],()=>1);
+   let e=topN(group(C,a=>a.Crop,a=>a.Profit),12);mk('c-crop-p','bar',e.map(x=>x[0]),[{label:'Net profit',data:e.map(x=>x[1])}],{horiz:1});
+   e=topN(group(C,a=>a.Crop,a=>a.Area),10);mk('c-crop-a','bar',e.map(x=>x[0]),[{label:'Area (ha)',data:e.map(x=>x[1])}],{horiz:1,money:false,tip:v=>num(v,1)+' ha'});
+   const se=['Kharif','Rabi','Zaid'];mk('c-season','bar',se,[{label:'Net profit',data:se.map(s=>sum(C.filter(a=>a.Season===s),a=>a.Profit))}]);
+   const yes=k=>100*A.filter(a=>a[k]==='Yes').length/Math.max(1,A.length);
+   const imp=100*C.filter(a=>a.Practice&&a.Practice!=='Conventional Farming').length/Math.max(1,C.length);
+   const ad=[['Training',yes('Training')],['Input support',yes('Input_Support')],['Exposure visit',yes('Exposure')],['Demo plot',yes('Demo')],['Improved practice',imp]].sort((a,b)=>b[1]-a[1]);
+   mk('c-adopt','bar',ad.map(x=>x[0]),[{label:'Share of records',data:ad.map(x=>x[1])}],{horiz:1,pct:1,max:100});
+   const avg=f=>{const r=C.filter(f);return r.length?sum(r,a=>a.Profit)/r.length:0};
+   mk('c-train','bar',['Trained','Not trained'],[{label:'Avg profit',data:[avg(a=>a.Training==='Yes'),avg(a=>a.Training==='No')]}]);
+   mk('c-yoy','bar',['Last year','This year'],[{label:'Net profit',data:[sum(A,a=>a.LY_Profit),pf]}]);
+   const cnt=(rows,k,n)=>topN(group(rows.filter(a=>a[k]),a=>a[k],()=>1),n);
+   e=cnt(C,'Irr_Source',8);mk('c-irr','bar',e.map(x=>x[0]),[{label:'Records',data:e.map(x=>x[1])}],{horiz:1,money:false});
+   e=cnt(C,'Irr_Method',8);mk('c-meth','bar',e.map(x=>x[0]),[{label:'Records',data:e.map(x=>x[1])}],{horiz:1,money:false});
+   e=cnt(C,'Practice',8);mk('c-prac','bar',e.map(x=>x[0]),[{label:'Records',data:e.map(x=>x[1])}],{horiz:1,money:false});
+   e=cnt(C,'Seed_Source',8);mk('c-seed','bar',e.map(x=>x[0]),[{label:'Records',data:e.map(x=>x[1])}],{horiz:1,money:false});}},
+
+ {id:'notes',name:'Data notes',html:()=>`<div class="card" style="max-width:860px"><h3 style="font-size:16px;margin-bottom:10px">What to know about this workbook</h3><ul class="notes" id="notes"></ul></div>`,
+  draw(){const sv=D.savings.filter(r=>r.Date<(shgBy[r.SHG_ID]||{}).Formation_Date).length,ln=D.loans.filter(l=>l.Loan_Date<(shgBy[l.SHG_ID]||{}).Formation_Date).length;
+   const cnt=new Map(group(D.members,r=>r.SHG_ID,()=>1));const mm=D.meetings.filter(x=>x.Total_Members!==cnt.get(x.SHG_ID)).length;
+   const wdx=D.withdrawals.filter(w=>w.Amount>sum(D.savings.filter(s=>s.Member_ID===w.Member_ID),s=>s.Amount)).length;
+   const dup=D.shgs.length-new Set(D.shgs.map(s=>s.SHG_Name)).size;
+   $('#notes').innerHTML=[`<b>Fictional test data.</b> The README sheet says every name, account and transaction is dummy data for an AppSheet build. Figures here show how the dashboard behaves, not real performance.`,
+    `<b>Dates do not line up.</b> ${sv} of ${D.savings.length} savings entries and ${ln} of ${D.loans.length} loans are dated before the SHG's formation date.`,
+    `<b>Attendance is unreliable.</b> ${mm} of ${D.meetings.length} meetings record a Total_Members figure (16 to 18) that differs from the registered members in that SHG (3 to 5).`,
+    `<b>Withdrawals above savings.</b> ${wdx} withdrawals are larger than the member's recorded savings.`,
+    `<b>SHGs sheet balance columns.</b> Current_balance holds small values that do not reconcile with transactions. Toatal_Balance (spelling as in the file), Distributed_Loan_Balance, Total_Recover_balance and Total_Interest are empty. This dashboard calculates every balance from the transaction sheets instead.`,
+    `<b>Agriculture rows are survey records.</b> 100 records cover 65 members. Land and last-year figures differ between a member's rows, so each row is treated as its own record and totals are summed across records.`,
+    `<b>Concentration.</b> ${D.shgs.filter(s=>s.State==='Rajasthan').length} of ${D.shgs.length} SHGs are in Rajasthan, and ${dup} SHG name is used twice (the SHG ID keeps them apart).`,
+    `<b>Sheet clean-up.</b> Users has two unnamed columns holding email and role. SHG_Members and Agriculture repeat the location block and carry two SHG_ID columns. The Power Query script drops these.`,
+    `<b>Overdue is measured against today.</b> A pending instalment is overdue when its due date is before today (${TODAY_ISO}). Change the as-of date in DAX by replacing TODAY().`].map(t=>`<li>${t}</li>`).join('')}}
+];
+
+/* ---------- shell ---------- */
+let cur=(location.hash||'').replace('#','')||'overview'; if(!PAGES.find(p=>p.id===cur))cur='overview';
+$('#main').innerHTML=PAGES.map(p=>`<section class="page" id="pg-${p.id}" role="tabpanel">${p.html()}</section>`).join('');
+$('#tabs').innerHTML=PAGES.map(p=>`<button class="tab" role="tab" data-p="${p.id}" id="t-${p.id}">${p.name}</button>`).join('');
+function show(id){cur=id;try{history.replaceState(null,'','#'+id)}catch(e){}
+  PAGES.forEach(p=>{$('#pg-'+p.id).classList.toggle('on',p.id===id);$('#t-'+p.id).setAttribute('aria-selected',p.id===id)});draw()}
+function draw(){view();PAGES.find(p=>p.id===cur).draw()}
+$('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(b)show(b.dataset.p)};
+['project','state','district','shg'].forEach(k=>$('#f-'+k).onchange=e=>{F[k]=e.target.value;if(k!=='shg'&&F.shg&&!shgPool().find(s=>s.SHG_ID===F.shg))F.shg='';buildFilters();draw()});
+$('#reset').onclick=()=>{Object.keys(F).forEach(k=>F[k]='');buildFilters();draw()};
+$('#theme').onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark';draw()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw());
+$('#asof').textContent='Position as of '+TODAY.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})+' · '+D.shgs.length+' SHGs · '+D.members.length+' members';
+Chart.defaults.font.family=CSS('--body');
+buildFilters();show(cur);
+</script>

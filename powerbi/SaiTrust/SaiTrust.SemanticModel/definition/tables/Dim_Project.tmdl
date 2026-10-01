@@ -1,0 +1,50 @@
+table Dim_Project
+
+	column Project_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Project_ID
+
+	column Project_Name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Project_Name
+
+	column Project_Code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Project_Code
+
+	column Start_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Start_Date
+
+	column End_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: End_Date
+
+	column Funding_Agency
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Funding_Agency
+
+	column Active
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: Active
+
+	partition Dim_Project = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Projects"),
+			    Typed = Table.TransformColumnTypes(Src, {
+			              {"Project_ID", type text}, {"Project_Name", type text}, {"Project_Code", type text},
+			              {"Start_Date", type date}, {"End_Date", type date}, {"Funding_Agency", type text}, {"Active", type logical}}),
+			    Out   = Table.RemoveColumns(Typed, List.Intersect({{"Logo"}, Table.ColumnNames(Typed)}))
+			in
+			    Out

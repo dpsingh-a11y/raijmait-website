@@ -1,0 +1,78 @@
+table Dim_Member
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column SHG_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_ID
+
+	column Member_Name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_Name
+
+	column Gender
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Gender
+
+	column DOB
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: DOB
+
+	column Mobile
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Mobile
+
+	column Joining_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Joining_Date
+
+	column Exit_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Exit_Date
+
+	column Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Status
+
+	column Age
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Age
+
+	column Age_Group
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Age_Group
+
+	column Member_Label
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_Label
+
+	partition Dim_Member = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("SHG_Members"),
+			    Keep  = Table.SelectColumns(Src, {"Member_ID","SHG_ID","Member_Name","Gender","DOB","Mobile","Joining_Date","Exit_Date","Status"}, MissingField.UseNull),
+			    Typed = Table.TransformColumnTypes(Keep, {{"DOB", type date},{"Joining_Date", type date},{"Exit_Date", type date}}),
+			    Age   = Table.AddColumn(Typed, "Age", each if [DOB] = null then null else Number.RoundDown(Duration.Days(Date.From(DateTime.LocalNow()) - [DOB]) / 365.25, 0), Int64.Type),
+			    AgeGrp= Table.AddColumn(Age, "Age_Group", each if [Age] = null then "Unknown" else if [Age] < 25 then "18-24" else if [Age] < 35 then "25-34" else if [Age] < 45 then "35-44" else if [Age] < 60 then "45-59" else "60+", type text),
+			    Label = Table.AddColumn(AgeGrp, "Member_Label", each [Member_Name] & " (" & [Member_ID] & ")", type text)
+			in
+			    Label

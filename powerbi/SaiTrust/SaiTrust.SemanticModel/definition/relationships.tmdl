@@ -1,0 +1,99 @@
+relationship fa7b4bd9-c64a-5f45-8c47-5462185ec99e
+	fromColumn: Dim_SHG.Project_ID
+	toColumn: Dim_Project.Project_ID
+
+relationship 82c266a9-6166-5151-a06f-3da1b5483027
+	fromColumn: Dim_Member.SHG_ID
+	toColumn: Dim_SHG.SHG_ID
+
+relationship f3f87a32-fdd5-530b-9f6a-f8496f4cf15f
+	fromColumn: Fact_FundReceipts.SHG_ID
+	toColumn: Dim_SHG.SHG_ID
+
+relationship 138d8960-5176-5d22-8fc5-6444e1b89fde
+	fromColumn: Fact_Expenses.SHG_ID
+	toColumn: Dim_SHG.SHG_ID
+
+relationship 34170524-0102-5c42-9201-d5b91207454b
+	fromColumn: Fact_Meetings.SHG_ID
+	toColumn: Dim_SHG.SHG_ID
+
+relationship 12c66b72-6119-56fa-af1b-98aab9236f3f
+	fromColumn: Fact_Savings.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship 0f8d193b-31fb-5b0f-8777-59336141afd0
+	fromColumn: Fact_Withdrawals.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship ce52a0f7-400c-5259-a43a-19e52b97bdaf
+	fromColumn: Fact_Loans.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship 3e7a66fa-cd33-542b-977e-737f5d81be4e
+	fromColumn: Fact_LoanSchedule.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship f95efd52-c240-54b6-8b0e-401c863ee359
+	fromColumn: Fact_Repayments.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship 5d945a63-2223-5a92-beaa-526d263d7a68
+	fromColumn: Fact_LoanApplications.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship 9dec51a1-fa20-5ca5-a326-e3277152dec2
+	fromColumn: Fact_Agriculture.Member_ID
+	toColumn: Dim_Member.Member_ID
+
+relationship a913a6dd-dfbc-501d-9a52-cb2b2bf9a0cc
+	fromColumn: Fact_FundReceipts.Fund_Source_ID
+	toColumn: Dim_FundSource.Fund_Source_ID
+
+relationship 911f1d43-b023-5f76-8498-0711cc9175dc
+	fromColumn: Fact_Loans.Purpose_ID
+	toColumn: Dim_LoanPurpose.Purpose_ID
+
+relationship c55574a2-f95e-5a66-b8d1-959002fc6f11
+	fromColumn: Fact_Expenses.Expense_Category_ID
+	toColumn: Dim_ExpenseCategory.Expense_Category_ID
+
+relationship e466b24a-31ff-5e07-9471-8afc1f279e4a
+	fromColumn: Fact_Savings.Date
+	toColumn: Dim_Date.Date
+
+relationship c023bf6a-f33a-5667-965a-d3300496c8e5
+	fromColumn: Fact_Withdrawals.Date
+	toColumn: Dim_Date.Date
+
+relationship de92d974-e944-5710-9b1f-8013a1a7001e
+	fromColumn: Fact_FundReceipts.Receipt_Date
+	toColumn: Dim_Date.Date
+
+relationship f112fd41-f1aa-5b18-9937-ecbc767fb249
+	fromColumn: Fact_Loans.Loan_Date
+	toColumn: Dim_Date.Date
+
+relationship ba07dc89-7e6d-52bf-899d-b61eef15e3a4
+	fromColumn: Fact_Repayments.Payment_Date
+	toColumn: Dim_Date.Date
+
+relationship fc452521-6250-5737-aed2-afd4992867ee
+	fromColumn: Fact_Expenses.Expense_Date
+	toColumn: Dim_Date.Date
+
+relationship 11205fb8-8dff-50a2-8562-63c51e5eaa3f
+	fromColumn: Fact_Meetings.Meeting_Date
+	toColumn: Dim_Date.Date
+
+relationship ac14f84a-dd73-51d8-b208-9e877459400d
+	fromColumn: Fact_LoanSchedule.Due_Date
+	toColumn: Dim_Date.Date
+
+relationship 5720eb1c-1dc3-5867-8ecc-fd7fbbcef44d
+	fromColumn: Fact_LoanApplications.Application_Date
+	toColumn: Dim_Date.Date
+
+relationship f1b115f6-6e49-5a8c-ab47-aa491978d4e1
+	fromColumn: Fact_Agriculture.Submit_Date
+	toColumn: Dim_Date.Date

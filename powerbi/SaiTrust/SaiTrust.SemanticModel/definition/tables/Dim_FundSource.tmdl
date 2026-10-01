@@ -1,0 +1,35 @@
+table Dim_FundSource
+
+	column Fund_Source_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Fund_Source_ID
+
+	column Source_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Source_Type
+
+	column Source_Name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Source_Name
+
+	column Organisation_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Organisation_Type
+
+	column Active
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: Active
+
+	partition Dim_FundSource = m
+		mode: import
+		source =
+			let
+			    Src = fnSheet("Fund_Sources"),
+			    Out = Table.SelectColumns(Src, {"Fund_Source_ID","Source_Type","Source_Name","Organisation_Type","Active"})
+			in
+			    Out

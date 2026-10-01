@@ -1,0 +1,72 @@
+table Fact_Repayments
+
+	column Repayment_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Repayment_ID
+
+	column Loan_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Loan_ID
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Payment_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Payment_Date
+
+	column Principal_Paid
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Principal_Paid
+
+	column Interest_Paid
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Interest_Paid
+
+	column Penalty
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Penalty
+
+	column Total_Paid
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Total_Paid
+
+	column Payment_Mode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Payment_Mode
+
+	column Receipt_No
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Receipt_No
+
+	column Entered_By
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Entered_By
+
+	partition Fact_Repayments = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Loan_Repayments"),
+			    Keep  = Table.SelectColumns(Src, {"Repayment_ID","Loan_ID","Member_ID","Payment_Date","Principal_Paid","Interest_Paid","Penalty","Total_Paid","Payment_Mode","Receipt_No","Entered_By"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Payment_Date", type date},{"Principal_Paid", Currency.Type},{"Interest_Paid", Currency.Type},
+			                                               {"Penalty", Currency.Type},{"Total_Paid", Currency.Type}})
+			in
+			    Typed

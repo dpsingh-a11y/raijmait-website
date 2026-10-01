@@ -1,0 +1,59 @@
+table Fact_Savings
+
+	column Savings_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Savings_ID
+
+	column Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Member_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Member_ID
+
+	column Savings_Type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Savings_Type
+
+	column Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	column Payment_Mode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Payment_Mode
+
+	column Financial_Year
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Financial_Year
+
+	column Meeting_No
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Meeting_No
+
+	column Entered_By
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Entered_By
+
+	partition Fact_Savings = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("Member_Savings"),
+			    Keep  = Table.SelectColumns(Src, {"Savings_ID","Date","Member_ID","Savings_Type","Amount","Payment_Mode","Financial_Year","Meeting_No","Entered_By"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Date", type date},{"Amount", Currency.Type},{"Meeting_No", Int64.Type}})
+			in
+			    Typed

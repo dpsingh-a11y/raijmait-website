@@ -1,0 +1,53 @@
+table Fact_Expenses
+
+	column Expense_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Expense_ID
+
+	column SHG_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: SHG_ID
+
+	column Expense_Date
+		dataType: dateTime
+		formatString: dd-mmm-yyyy
+		summarizeBy: none
+		sourceColumn: Expense_Date
+
+	column Expense_Category_ID
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Expense_Category_ID
+
+	column Amount
+		dataType: decimal
+		formatString: "₹"#,0
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	column Payment_Mode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Payment_Mode
+
+	column Purpose
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purpose
+
+	column Voucher_No
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Voucher_No
+
+	partition Fact_Expenses = m
+		mode: import
+		source =
+			let
+			    Src   = fnSheet("SHG_Expenses"),
+			    Keep  = Table.SelectColumns(Src, {"Expense_ID","SHG_ID","Expense_Date","Expense_Category_ID","Amount","Payment_Mode","Purpose","Voucher_No"}),
+			    Typed = Table.TransformColumnTypes(Keep, {{"Expense_Date", type date},{"Amount", Currency.Type}})
+			in
+			    Typed

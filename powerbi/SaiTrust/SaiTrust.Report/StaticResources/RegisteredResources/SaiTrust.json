@@ -1,0 +1,41 @@
+{
+  "name": "Sai Trust",
+  "dataColors": ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#008300", "#4A3AA7", "#E34948"],
+  "background": "#EEF0F3",
+  "foreground": "#0B0B0B",
+  "tableAccent": "#2A78D6",
+  "good": "#0CA30C",
+  "neutral": "#FAB219",
+  "bad": "#D03B3B",
+  "maximum": "#184F95",
+  "center": "#86B6EF",
+  "minimum": "#CDE2FB",
+  "null": "#8A8985",
+  "textClasses": {
+    "title":   { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#0B0B0B" },
+    "label":   { "fontFace": "Segoe UI", "fontSize": 11, "color": "#52514E" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 28, "color": "#0B0B0B" },
+    "header":  { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#52514E" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#FCFCFB" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#DFE2E7" } }, "radius": 10 }],
+        "title": [{ "show": true, "fontColor": { "solid": { "color": "#0B0B0B" } }, "fontSize": 14, "fontFamily": "Segoe UI Semibold" }],
+        "padding": [{ "top": 8, "bottom": 8, "left": 10, "right": 10 }]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#EEF0F3" } }, "transparency": 0 }]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [{ "fontSize": 28, "color": { "solid": { "color": "#0B0B0B" } } }],
+        "categoryLabels": [{ "show": true, "fontSize": 11, "color": { "solid": { "color": "#7D7C78" } } }]
+      }
+    }
+  }
+}
