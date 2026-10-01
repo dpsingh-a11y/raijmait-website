@@ -1,0 +1,206 @@
+// =====================================================================
+//  SAI TRUST – DAX  (paste in Power BI Desktop > Modeling > New table / New measure)
+//  Section 1 = calculated table Dim_Date.  Section 2 = a blank "_Measures" table.
+//  Section 3+ = measures.  Create each measure with Home > New measure and
+//  put them in the display folder shown in the comment.
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// 1. DATE TABLE  (New table)  – mark as date table on [Date]
+// ---------------------------------------------------------------------
+Dim_Date =
+ADDCOLUMNS (
+    CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2027, 12, 31 ) ),
+    "Year",           YEAR ( [Date] ),
+    "Month No",       MONTH ( [Date] ),
+    "Month",          FORMAT ( [Date], "MMM" ),
+    "Month Year",     FORMAT ( [Date], "MMM yyyy" ),
+    "Month Year Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] ),
+    "Quarter",        "Q" & QUARTER ( [Date] ),
+    "Financial Year", IF ( MONTH ( [Date] ) >= 4,
+                           YEAR ( [Date] ) & "-" & RIGHT ( YEAR ( [Date] ) + 1, 2 ),
+                           YEAR ( [Date] ) - 1 & "-" & RIGHT ( YEAR ( [Date] ), 2 ) ),
+    "Day Name",       FORMAT ( [Date], "ddd" )
+)
+// then: Month sorted by [Month No]; [Month Year] sorted by [Month Year Sort]
+
+// ---------------------------------------------------------------------
+// 2. MEASURE HOLDER  (New table)
+// ---------------------------------------------------------------------
+_Measures = ROW ( "x", 1 )      // hide column [x]
+
+
+// =====================================================================
+// 3. MEMBERS & SHGs                                   [folder: 1 SHG & Members]
+// =====================================================================
+SHG Count          = DISTINCTCOUNT ( Dim_SHG[SHG_ID] )
+Active SHGs        = CALCULATE ( DISTINCTCOUNT ( Dim_SHG[SHG_ID] ), Dim_SHG[Status] = "Active" )
+Members            = CALCULATE ( DISTINCTCOUNT ( Dim_Member[Member_ID] ), Dim_Member[Status] = "Active" )
+Female Members     = CALCULATE ( [Members], Dim_Member[Gender] = "Female" )
+Female %           = DIVIDE ( [Female Members], [Members] )
+Avg Members per SHG = DIVIDE ( [Members], [SHG Count] )
+Villages Covered   = DISTINCTCOUNT ( Dim_SHG[Village] )
+Districts Covered  = DISTINCTCOUNT ( Dim_SHG[District] )
+Avg Member Age     = AVERAGE ( Dim_Member[Age] )
+
+
+// =====================================================================
+// 4. SAVINGS                                          [folder: 2 Savings]
+// =====================================================================
+Total Savings      = SUM ( Fact_Savings[Amount] )
+Total Withdrawals  = SUM ( Fact_Withdrawals[Amount] )
+Net Savings        = [Total Savings] - [Total Withdrawals]
+Savers             = DISTINCTCOUNT ( Fact_Savings[Member_ID] )
+Savings per Member = DIVIDE ( [Net Savings], [Members] )
+Avg Saving Entry   = AVERAGE ( Fact_Savings[Amount] )
+Withdrawal Ratio % = DIVIDE ( [Total Withdrawals], [Total Savings] )
+Savings MTD        = TOTALMTD ( [Total Savings], Dim_Date[Date] )
+Savings Last Month = CALCULATE ( [Total Savings], DATEADD ( Dim_Date[Date], -1, MONTH ) )
+Savings MoM %      = DIVIDE ( [Total Savings] - [Savings Last Month], [Savings Last Month] )
+Savings YTD (FY)   = CALCULATE ( [Total Savings], DATESYTD ( Dim_Date[Date], "3/31" ) )
+Cumulative Savings =
+CALCULATE ( [Net Savings], FILTER ( ALL ( Dim_Date[Date] ), Dim_Date[Date] <= MAX ( Dim_Date[Date] ) ) )
+// ^ Fact_Withdrawals must also be related to Dim_Date for the cumulative to work.
+
+
+// =====================================================================
+// 5. FUNDS & EXPENSES                                 [folder: 3 Funds]
+// =====================================================================
+Fund Received      = SUM ( Fact_FundReceipts[Amount] )
+Fund Receipts #    = COUNTROWS ( Fact_FundReceipts )
+Fund Sources #     = DISTINCTCOUNT ( Fact_FundReceipts[Fund_Source_ID] )
+Fund per SHG       = DIVIDE ( [Fund Received], [SHG Count] )
+Total Expenses     = SUM ( Fact_Expenses[Amount] )
+Expense % of Funds = DIVIDE ( [Total Expenses], [Fund Received] )
+Expense per SHG    = DIVIDE ( [Total Expenses], [SHG Count] )
+
+
+// =====================================================================
+// 6. LOANS & REPAYMENTS                               [folder: 4 Loans]
+// =====================================================================
+Loans Disbursed        = SUM ( Fact_Loans[Principal_Amount] )
+Loans #                = COUNTROWS ( Fact_Loans )
+Borrowers              = DISTINCTCOUNT ( Fact_Loans[Member_ID] )
+Avg Loan Size          = DIVIDE ( [Loans Disbursed], [Loans #] )
+Loan Penetration %     = DIVIDE ( [Borrowers], [Members] )
+Principal Collected    = SUM ( Fact_Repayments[Principal_Paid] )
+Interest Collected     = SUM ( Fact_Repayments[Interest_Paid] )
+Penalty Collected      = SUM ( Fact_Repayments[Penalty] )
+Total Collected        = SUM ( Fact_Repayments[Total_Paid] )
+Outstanding Principal  = [Loans Disbursed] - [Principal Collected]
+
+Principal Due To Date  =
+CALCULATE ( SUM ( Fact_LoanSchedule[Principal_Due] ), Fact_LoanSchedule[Due_Date] <= TODAY () )
+
+Overdue Principal      =
+CALCULATE (
+    SUM ( Fact_LoanSchedule[Principal_Due] ),
+    Fact_LoanSchedule[Status] = "Pending",
+    Fact_LoanSchedule[Due_Date] < TODAY ()
+)
+Overdue Installments # =
+CALCULATE (
+    COUNTROWS ( Fact_LoanSchedule ),
+    Fact_LoanSchedule[Status] = "Pending",
+    Fact_LoanSchedule[Due_Date] < TODAY ()
+)
+Overdue Loans #        =
+CALCULATE (
+    DISTINCTCOUNT ( Fact_LoanSchedule[Loan_ID] ),
+    Fact_LoanSchedule[Status] = "Pending",
+    Fact_LoanSchedule[Due_Date] < TODAY ()
+)
+PAR %                  = DIVIDE ( [Overdue Principal], [Outstanding Principal] )   // Portfolio at Risk
+Repayment Rate %       = DIVIDE ( [Principal Collected], [Principal Due To Date] )
+Interest Yield %       = DIVIDE ( [Interest Collected], [Loans Disbursed] )
+Upcoming Due (30 days) =
+CALCULATE (
+    SUM ( Fact_LoanSchedule[Installment_Due] ),
+    Fact_LoanSchedule[Status] = "Pending",
+    DATESBETWEEN ( Fact_LoanSchedule[Due_Date], TODAY (), TODAY () + 30 )
+)
+Avg Interest Rate      = AVERAGE ( Fact_Loans[Interest_Rate] )
+Avg Tenure (months)    = AVERAGE ( Fact_Loans[Tenure] )
+
+// Risk bucket label for a status card / conditional format (0-5 PAR OK, 5-10 watch, >10 risk)
+PAR Status =
+SWITCH ( TRUE (),
+    ISBLANK ( [PAR %] ), "No data",
+    [PAR %] <= 0.05,     "Healthy",
+    [PAR %] <= 0.10,     "Watch",
+    "At risk" )
+
+// Loan applications
+Applications #         = COUNTROWS ( Fact_LoanApplications )
+Applied Amount         = SUM ( Fact_LoanApplications[Requested_Amount] )
+Approved Amount        = SUM ( Fact_LoanApplications[Approved_Amount] )
+Approval Rate %        = DIVIDE ( CALCULATE ( [Applications #], Fact_LoanApplications[Status] = "Approved" ), [Applications #] )
+Pending Applications # = CALCULATE ( [Applications #], Fact_LoanApplications[Status] = "Pending" )
+
+
+// =====================================================================
+// 7. CASH POSITION & ATTENDANCE                       [folder: 5 Position]
+// =====================================================================
+// Estimated cash in hand/bank: everything received + saved + collected, less everything paid out.
+Estimated Cash Balance =
+[Fund Received] + [Total Savings] + [Total Collected]
+    - [Total Withdrawals] - [Loans Disbursed] - [Total Expenses]
+
+Meetings Held   = COUNTROWS ( Fact_Meetings )
+Attendance %    = DIVIDE ( SUM ( Fact_Meetings[Members_Present] ), SUM ( Fact_Meetings[Total_Members] ) )
+Meetings per SHG = DIVIDE ( [Meetings Held], [SHG Count] )
+
+
+// =====================================================================
+// 8. AGRICULTURE & LIVELIHOOD                         [folder: 6 Agriculture]
+//    One row of Fact_Agriculture = one survey record.
+// =====================================================================
+Survey Records   = COUNTROWS ( Fact_Agriculture )
+Farmers Surveyed = DISTINCTCOUNT ( Fact_Agriculture[Member_ID] )
+Cultivating Records = CALCULATE ( [Survey Records], Fact_Agriculture[Cultivated] = "Yes" )
+Land Holding (ha)  = SUM ( Fact_Agriculture[Total_Land_Ha] )
+Avg Land Holding (ha) = AVERAGE ( Fact_Agriculture[Total_Land_Ha] )
+Irrigated Land (ha)   = SUM ( Fact_Agriculture[Irrigated_Land_Ha] )
+Irrigated % of Agri Land = DIVIDE ( [Irrigated Land (ha)], SUM ( Fact_Agriculture[Agri_Land_Ha] ) )
+Area Sown (ha)    = SUM ( Fact_Agriculture[Sown_Area_Ha] )
+Production (qtl)  = SUM ( Fact_Agriculture[Production_Qtl] )
+Yield (qtl/ha)    = DIVIDE ( [Production (qtl)], [Area Sown (ha)] )
+Crop Income       = SUM ( Fact_Agriculture[Income] )
+Cultivation Cost  = SUM ( Fact_Agriculture[Cultivation_Cost] )
+Net Profit        = SUM ( Fact_Agriculture[Net_Profit] )
+Profit per ha     = DIVIDE ( [Net Profit], [Area Sown (ha)] )
+Benefit Cost Ratio = DIVIDE ( [Crop Income], [Cultivation Cost] )
+Profit Margin %   = DIVIDE ( [Net Profit], [Crop Income] )
+Last Year Profit  = SUM ( Fact_Agriculture[LY_Profit] )
+Last Year Profit per ha = DIVIDE ( [Last Year Profit], SUM ( Fact_Agriculture[LY_Area_Ha] ) )
+Profit Change %   = DIVIDE ( [Net Profit] - [Last Year Profit], ABS ( [Last Year Profit] ) )
+Avg Profit per Record = DIVIDE ( [Net Profit], [Cultivating Records] )
+
+// Adoption / coverage (share of survey records answering "Yes")
+Training Coverage %      = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Training] = "Yes" ), [Survey Records] )
+Exposure Visit %         = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Exposure] = "Yes" ), [Survey Records] )
+Input Support %          = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Input_Support] = "Yes" ), [Survey Records] )
+Demo Plot %              = DIVIDE ( CALCULATE ( [Survey Records], Fact_Agriculture[Demo_Plot] = "Yes" ), [Survey Records] )
+Improved Practice %      = DIVIDE ( CALCULATE ( [Cultivating Records], Fact_Agriculture[Practice_Adopted] <> "Conventional Farming", NOT ISBLANK ( Fact_Agriculture[Practice_Adopted] ) ), [Cultivating Records] )
+Certified/Hybrid Seed %  = DIVIDE ( CALCULATE ( [Cultivating Records], Fact_Agriculture[Seed_Type] IN { "Certified", "Hybrid" } ), [Cultivating Records] )
+
+// Profit with / without training – shows impact on one visual (legend = Fact_Agriculture[Training])
+Profit per Record (Trained) = CALCULATE ( [Avg Profit per Record], Fact_Agriculture[Training] = "Yes" )
+Profit per Record (Not trained) = CALCULATE ( [Avg Profit per Record], Fact_Agriculture[Training] = "No" )
+
+
+// =====================================================================
+// 9. DISPLAY HELPERS
+// =====================================================================
+// Compact rupee label for cards (use as measure on a card / title)
+Rs Short (Savings) =
+VAR v = [Total Savings]
+RETURN "Rs " & IF ( v >= 100000, FORMAT ( v / 100000, "0.0" ) & " L", IF ( v >= 1000, FORMAT ( v / 1000, "0.0" ) & " K", FORMAT ( v, "0" ) ) )
+
+Selected Filters Text =
+"Project: "  & IF ( ISFILTERED ( Dim_SHG[Project_ID] ), CONCATENATEX ( VALUES ( Dim_SHG[Project_ID] ), Dim_SHG[Project_ID], ", " ), "All" ) &
+"  |  State: " & IF ( ISFILTERED ( Dim_SHG[State] ), CONCATENATEX ( VALUES ( Dim_SHG[State] ), Dim_SHG[State], ", " ), "All" )
+
+// Conditional-format helpers (Format > fx > Field value)
+PAR Colour        = SWITCH ( [PAR Status], "Healthy", "#0CA30C", "Watch", "#FAB219", "At risk", "#D03B3B", "#8A8A85" )
+Repayment Colour  = IF ( [Repayment Rate %] >= 0.95, "#0CA30C", IF ( [Repayment Rate %] >= 0.85, "#FAB219", "#D03B3B" ) )
